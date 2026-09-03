@@ -1,0 +1,39 @@
+#  nginx-test
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-test
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/hitohata/k3services'
+    targetRevision: HEAD
+    path: apps/nginx-test
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+# echo-service
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: echo-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/hitohata/k3services'
+    targetRevision: HEAD
+    path: apps/echo-service
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
