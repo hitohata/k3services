@@ -18,6 +18,28 @@ spec:
       prune: true
       selfHeal: true
 ---
+# nfs-provisioner
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nfs-provisioner
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/hitohata/k3services'
+    targetRevision: HEAD
+    path: infrastructure/nfs-provisioner
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: nfs-provisioner
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
 # echo-service
 apiVersion: argoproj.io/v1alpha1
 kind: Application
