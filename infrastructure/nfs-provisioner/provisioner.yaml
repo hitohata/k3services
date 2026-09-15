@@ -66,7 +66,7 @@ spec:
             - name: PROVISIONER_NAME
               value: k8s-sigs.io/nfs-subdir-external-provisioner
             - name: NFS_SERVER
-              value: 198.168.10.100
+              value: 192.168.10.100
             - name: NFS_PATH
               value: /Pi-NAS
           volumeMounts:
@@ -75,7 +75,7 @@ spec:
       volumes:
         - name: nfs-client-root
           nfs:
-            server: 198.168.10.100
+            server: 192.168.10.100
             path: /Pi-NAS
 ---
 apiVersion: storage.k8s.io/v1
@@ -86,3 +86,5 @@ provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
 reclaimPolicy: Retain
 allowVolumeExpansion: true
 volumeBindingMode: Immediate
+mountOptions:
+  - nfsvers=4

@@ -4,7 +4,7 @@
 
 The `nfs-provisioner` infrastructure application runs the NFS subdirectory
 provisioner in the `nfs-provisioner` namespace. It uses the NFS export
-`198.168.10.100:/Pi-NAS` and provides the `nfs-client` StorageClass.
+`192.168.10.100:/Pi-NAS` over NFSv4 and provides the `nfs-client` StorageClass.
 
 Each PVC using that StorageClass receives its own directory on the NAS. For
 example, an application can request storage with:
