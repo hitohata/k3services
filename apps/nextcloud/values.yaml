@@ -1,5 +1,10 @@
 replicaCount: 1
 
+# Keep this stack off p51, whose local storage is an SD card. MariaDB's
+# local-path PVC is therefore always provisioned on n100.
+nodeSelector:
+  kubernetes.io/hostname: n100
+
 ingress:
   enabled: true
   className: traefik
@@ -47,6 +52,8 @@ mariadb:
     username: nextcloud
     existingSecret: nextcloud-credentials
   primary:
+    nodeSelector:
+      kubernetes.io/hostname: n100
     persistence:
       enabled: true
       storageClass: local-path
@@ -61,6 +68,8 @@ redis:
     existingSecret: nextcloud-credentials
     existingSecretPasswordKey: redis-password
   master:
+    nodeSelector:
+      kubernetes.io/hostname: n100
     persistence:
       enabled: false
   replica:
@@ -136,6 +145,8 @@ extraManifests:
           template:
             spec:
               restartPolicy: OnFailure
+              nodeSelector:
+                kubernetes.io/hostname: n100
               containers:
                 - name: mariadb-dump
                   image: mariadb:11.8

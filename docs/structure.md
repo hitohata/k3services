@@ -33,8 +33,10 @@ time.
 | Backup CronJob | Daily compressed MariaDB dump | NFS backup PVC |
 
 MariaDB intentionally uses `local-path`; its live database files never use the
-NAS. A local-path database is tied to the node that owns its volume, so it is
-not high availability. Its backup is what makes node recovery practical.
+NAS. The Nextcloud stack is pinned to `n100`, keeping MariaDB and all other
+storage-related workloads off `p51`'s SD card. A local-path database is tied to
+its node, so it is not high availability. Its backup is what makes node
+recovery practical.
 
 ## NAS layout
 
