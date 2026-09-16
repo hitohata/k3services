@@ -102,9 +102,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: registry-1.docker.io/bitnamicharts
+    repoURL: https://bitnami.github.io/sealed-secrets
     chart: sealed-secrets
-    targetRevision: 2.18.6
+    targetRevision: 2.19.3
     helm:
       releaseName: sealed-secrets-controller
       parameters:
