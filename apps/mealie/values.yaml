@@ -1,0 +1,55 @@
+# Mealie application configuration. PostgreSQL has its own values file because
+# it is rendered as a separate Helm source in the same Argo CD Application.
+fullnameOverride: mealie
+
+image:
+  repository: ghcr.io/mealie-recipes/mealie
+  tag: v3.26.0
+  pullPolicy: IfNotPresent
+
+nodeSelector:
+  kubernetes.io/hostname: n100
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations: {}
+  hosts:
+    - host: mealie.n100.lan
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+persistence:
+  enabled: true
+  storageClass: nfs-client-mealie
+  accessMode: ReadWriteMany
+  size: 10Gi
+
+env:
+  TZ: America/Vancouver
+  BASE_URL: http://mealie.n100.lan
+  DEFAULT_GROUP: Home
+  DEFAULT_HOUSEHOLD: Family
+  ALLOW_SIGNUP: "false"
+  ALLOW_PASSWORD_LOGIN: "true"
+  DB_ENGINE: postgres
+  UVICORN_WORKERS: "1"
+
+postgresql:
+  external:
+    enabled: true
+    host: mealie-postgresql
+    port: 5432
+    database: mealie
+    existingSecret: mealie-postgresql-credentials
+    userKey: username
+    passwordKey: password
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 1Gi

@@ -30,4 +30,5 @@ Persistent volumes use `Retain`, so deleting a PVC does not delete its NAS data.
 ## System structure
 
 See [the structure guide](docs/structure.md) for the Argo CD layout, NFS
-storage, Helm-managed Nextcloud service, encrypted credentials, and backups.
+storage, Helm-managed Nextcloud and Mealie services, encrypted credentials,
+and backups.
