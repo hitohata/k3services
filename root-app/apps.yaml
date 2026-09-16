@@ -143,3 +143,45 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+# mealie
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mealie
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://rtomik.github.io/helm-charts
+      chart: mealie
+      targetRevision: 0.0.2
+      helm:
+        releaseName: mealie
+        valueFiles:
+          - $values/apps/mealie/values.yaml
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: postgresql
+      targetRevision: 18.11.3
+      helm:
+        releaseName: mealie-postgresql
+        valueFiles:
+          - $values/apps/mealie/postgresql-values.yaml
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      ref: values
+      path: apps/mealie/resources
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      path: apps/mealie/secrets
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mealie
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,28 @@
+fullnameOverride: mealie-postgresql
+architecture: standalone
+
+auth:
+  enablePostgresUser: true
+  username: mealie
+  database: mealie
+  existingSecret: mealie-postgresql-credentials
+  secretKeys:
+    adminPasswordKey: postgres-password
+    userPasswordKey: password
+
+primary:
+  nodeSelector:
+    kubernetes.io/hostname: n100
+  persistence:
+    enabled: true
+    storageClass: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 1Gi
