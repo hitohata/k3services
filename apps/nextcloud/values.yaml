@@ -23,12 +23,24 @@ nextcloud:
 
 persistence:
   enabled: true
+  # The chart stores its application files and configuration under this mount.
+  # Keep it on n100's local disk: the image must chown these files during its
+  # first start, an operation rejected by the NAS NFS root-squash export.
   existingClaim: nextcloud-config
-  accessMode: ReadWriteMany
+  accessMode: ReadWriteOnce
   nextcloudData:
     enabled: true
     existingClaim: nextcloud-data
     accessMode: ReadWriteMany
+
+# The initial application install can take several minutes.  While this probe
+# runs, Kubernetes suppresses liveness and readiness failures.
+startupProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
 
 internalDatabase:
   enabled: false
@@ -104,8 +116,8 @@ extraManifests:
       name: nextcloud-config
     spec:
       accessModes:
-        - ReadWriteMany
-      storageClassName: nfs-client-nextcloud
+        - ReadWriteOnce
+      storageClassName: local-path
       resources:
         requests:
           storage: 5Gi
