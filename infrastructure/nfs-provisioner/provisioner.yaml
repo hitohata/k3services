@@ -88,3 +88,18 @@ allowVolumeExpansion: true
 volumeBindingMode: Immediate
 mountOptions:
   - nfsvers=4
+---
+# Nextcloud uses dedicated directories beneath /Pi-NAS/nextcloud without
+# changing the path pattern used by other nfs-client PVCs.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-client-nextcloud
+provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
+parameters:
+  pathPattern: "nextcloud/${.PVC.name}"
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+mountOptions:
+  - nfsvers=4
