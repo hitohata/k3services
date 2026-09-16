@@ -1,0 +1,163 @@
+replicaCount: 1
+
+ingress:
+  enabled: true
+  className: traefik
+  path: /
+  pathType: Prefix
+
+nextcloud:
+  host: nextcloud.n100.lan
+  trustedDomains:
+    - nextcloud.n100.lan
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-credentials
+    usernameKey: nextcloud-username
+    passwordKey: nextcloud-password
+
+persistence:
+  enabled: true
+  existingClaim: nextcloud-config
+  accessMode: ReadWriteMany
+  nextcloudData:
+    enabled: true
+    existingClaim: nextcloud-data
+    accessMode: ReadWriteMany
+
+internalDatabase:
+  enabled: false
+externalDatabase:
+  enabled: true
+  type: mysql
+  host: nextcloud-mariadb
+  database: nextcloud
+  user: nextcloud
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-credentials
+    passwordKey: mariadb-password
+
+mariadb:
+  enabled: true
+  fullnameOverride: nextcloud-mariadb
+  architecture: standalone
+  auth:
+    database: nextcloud
+    username: nextcloud
+    existingSecret: nextcloud-credentials
+  primary:
+    persistence:
+      enabled: true
+      storageClass: local-path
+      accessModes:
+        - ReadWriteOnce
+      size: 20Gi
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    existingSecret: nextcloud-credentials
+    existingSecretPasswordKey: redis-password
+  master:
+    persistence:
+      enabled: false
+  replica:
+    replicaCount: 0
+    persistence:
+      enabled: false
+externalRedis:
+  enabled: true
+  host: nextcloud-redis-master
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-credentials
+    passwordKey: redis-password
+
+cronjob:
+  enabled: true
+  type: cronjob
+  cronjob:
+    schedule: "*/5 * * * *"
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    memory: 2Gi
+
+extraManifests:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: nextcloud-config
+    spec:
+      accessModes:
+        - ReadWriteMany
+      storageClassName: nfs-client-nextcloud
+      resources:
+        requests:
+          storage: 5Gi
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: nextcloud-data
+    spec:
+      accessModes:
+        - ReadWriteMany
+      storageClassName: nfs-client-nextcloud
+      resources:
+        requests:
+          storage: 100Gi
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: nextcloud-backups
+    spec:
+      accessModes:
+        - ReadWriteMany
+      storageClassName: nfs-client-nextcloud
+      resources:
+        requests:
+          storage: 20Gi
+  - apiVersion: batch/v1
+    kind: CronJob
+    metadata:
+      name: nextcloud-db-backup
+    spec:
+      schedule: "30 2 * * *"
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 3
+      jobTemplate:
+        spec:
+          template:
+            spec:
+              restartPolicy: OnFailure
+              containers:
+                - name: mariadb-dump
+                  image: mariadb:11.8
+                  command:
+                    - /bin/sh
+                    - -ec
+                  args:
+                    - |
+                      export MYSQL_PWD="$(cat /credentials/mariadb-password)"
+                      backup_file="/backups/nextcloud-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
+                      mariadb-dump --single-transaction --default-character-set=utf8mb4 --host=nextcloud-mariadb --user=nextcloud nextcloud | gzip > "$backup_file"
+                      find /backups -type f -name 'nextcloud-*.sql.gz' -mtime +13 -delete
+                  volumeMounts:
+                    - name: credentials
+                      mountPath: /credentials
+                      readOnly: true
+                    - name: backups
+                      mountPath: /backups
+              volumes:
+                - name: credentials
+                  secret:
+                    secretName: nextcloud-credentials
+                - name: backups
+                  persistentVolumeClaim:
+                    claimName: nextcloud-backups

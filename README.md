@@ -26,3 +26,8 @@ spec:
 The StorageClass is not the cluster default. Existing workloads therefore keep
 their current storage behavior unless they explicitly request `nfs-client`.
 Persistent volumes use `Retain`, so deleting a PVC does not delete its NAS data.
+
+## System structure
+
+See [the structure guide](docs/structure.md) for the Argo CD layout, NFS
+storage, Helm-managed Nextcloud service, encrypted credentials, and backups.
