@@ -62,6 +62,10 @@ passwords. The encryption key remains in the cluster; therefore a sealed
 credential file is safe to store in this repository but cannot be reused on a
 different cluster.
 
+The `nextcloud-username` key is the initial administrator account. The separate
+`db-username` key must be `nextcloud`, matching the MariaDB user configured by
+the Helm values.
+
 Use the instructions in [apps/nextcloud/README.md](../apps/nextcloud/README.md)
 to create the encrypted file. Rotate passwords with the service's own tooling
 and update the sealed Secret in the same maintenance window; changing only the
