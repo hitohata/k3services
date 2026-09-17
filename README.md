@@ -30,5 +30,5 @@ Persistent volumes use `Retain`, so deleting a PVC does not delete its NAS data.
 ## System structure
 
 See [the structure guide](docs/structure.md) for the Argo CD layout, NFS
-storage, Nextcloud, Mealie, Vaultwarden, IT-Tools, Netdata, and Forgejo
-services, encrypted credentials, and backups.
+storage, Nextcloud, Mealie, Vaultwarden, IT-Tools, Netdata, Paperless-ngx, and
+Forgejo services, encrypted credentials, and backups.
