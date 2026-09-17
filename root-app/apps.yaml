@@ -233,3 +233,35 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+# netdata
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: netdata
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://netdata.github.io/helmchart/
+      chart: netdata
+      targetRevision: 3.7.174
+      helm:
+        releaseName: netdata
+        valueFiles:
+          - $values/apps/netdata/values.yaml
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      ref: values
+      path: apps/netdata/resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: netdata
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
