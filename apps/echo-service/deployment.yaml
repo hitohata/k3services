@@ -38,8 +38,19 @@ metadata:
   namespace: default
   annotations:
     ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
+  - host: echo.dejima.men
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: echo-service
+            port:
+              number: 80
   - host: echo.n100.lan
     http:
       paths:

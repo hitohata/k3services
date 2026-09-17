@@ -8,13 +8,25 @@ nodeSelector:
 ingress:
   enabled: true
   className: traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
   path: /
   pathType: Prefix
 
 nextcloud:
-  host: nextcloud.n100.lan
+  host: nextcloud.dejima.men
   trustedDomains:
+    - nextcloud.dejima.men
     - nextcloud.n100.lan
+  configs:
+    reverse-proxy.config.php: |-
+      <?php
+      $CONFIG = array (
+        'trusted_proxies' => array (
+          0 => '10.42.0.0/16',
+          1 => '192.168.10.1',
+        ),
+      );
   existingSecret:
     enabled: true
     secretName: nextcloud-credentials
@@ -110,6 +122,26 @@ resources:
     memory: 2Gi
 
 extraManifests:
+  # Preserve direct LAN access through the previous internal hostname.
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: nextcloud-lan
+      annotations:
+        traefik.ingress.kubernetes.io/router.entrypoints: web
+    spec:
+      ingressClassName: traefik
+      rules:
+        - host: nextcloud.n100.lan
+          http:
+            paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                  service:
+                    name: nextcloud
+                    port:
+                      name: http
   - apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:

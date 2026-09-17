@@ -38,8 +38,19 @@ metadata:
   namespace: default
   annotations:
     ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
+  - host: myapp.dejima.men
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gitops-nginx
+            port:
+              number: 80
   - host: myapp.n100.lan
     http:
       paths:
