@@ -1,0 +1,5 @@
+- Administration:
+    - Argo CD:
+        icon: argo-cd.png
+        href: https://argocd.dejima.men
+        description: GitOps deployments
