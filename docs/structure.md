@@ -23,9 +23,13 @@ root-app/apps.yaml
 │   └── backup.yaml                     backup PVC and CronJob
 ├── apps/it-tools/
 │   └── deployment.yaml                 stateless application, service and ingress
-└── apps/netdata/
-    ├── values.yaml                     Netdata Helm configuration
-    └── resources/                      restricted cluster RBAC
+├── apps/netdata/
+│   ├── values.yaml                     Netdata Helm configuration
+│   └── resources/                      restricted cluster RBAC
+└── apps/paperless/
+    ├── postgresql-values.yaml          Paperless PostgreSQL Helm configuration
+    ├── resources/                      application, Valkey, ingress and backups
+    └── secrets/                        encrypted application/database credentials
 ```
 
 The root application references the upstream Nextcloud Helm chart and the
@@ -150,6 +154,31 @@ filesystem mounts, and elevated capabilities to observe each node. These are
 expected permissions for the official chart but make Netdata a
 security-sensitive cluster component.
 
+## Paperless-ngx components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Paperless-ngx | Document management at `https://paperless.dejima.men` | local index/data PVC; NFS document and workflow PVCs |
+| PostgreSQL | Transactional database | K3s `local-path` PVC |
+| Valkey | Task queue and application cache | K3s `local-path` PVC |
+| Backup jobs | PostgreSQL dump and portable document export | NFS backup/export PVCs |
+
+The complete stack is pinned to `n100`. PostgreSQL, Valkey, and Paperless's
+rebuildable index/classifier data use node-local storage; documents and the
+consume, export, and database-backup areas use `nfs-client-paperless`:
+
+```text
+/Pi-NAS/paperless/
+├── paperless-media/     # originals, archived documents and thumbnails
+├── paperless-consume/   # network document intake
+├── paperless-export/    # portable document export
+└── paperless-backups/   # daily PostgreSQL dumps
+```
+
+The consume directory uses polling because native filesystem notifications are
+not reliable on NFS. The public URL is only exposed through the TLS-terminating
+gateway; Paperless is configured to trust the forwarded HTTPS scheme.
+
 ## Secrets
 
 Sealed Secrets is deployed in `kube-system`. It decrypts a committed
@@ -175,6 +204,13 @@ PostgreSQL administrator. Generate it with the instructions in
 [apps/mealie/README.md](../apps/mealie/README.md). Rotating either database
 password requires changing the password in PostgreSQL as well as updating the
 SealedSecret.
+
+Paperless uses `paperless-credentials` in the `paperless` namespace for its
+database roles, Django secret key, and initial administrator account. The
+committed SealedSecret contains generated values encrypted for this cluster.
+Retrieve the initial administrator password or reseal replacement credentials
+with the commands in
+[apps/paperless/README.md](../apps/paperless/README.md).
 
 ## Backups and recovery
 
@@ -213,3 +249,16 @@ RSA keys from the data directory.
 To recover, stop Vaultwarden, extract an archive into its data PVC, rename the
 included `db_<timestamp>.sqlite3` file to `db.sqlite3`, and make sure no stale
 `db.sqlite3-wal` or `db.sqlite3-shm` files remain before starting Vaultwarden.
+
+## Paperless-ngx backups and recovery
+
+The `paperless-postgresql-backup` CronJob runs daily at 03:15 UTC, writes a
+compressed SQL dump, and retains 14 daily dumps. At 03:45 UTC,
+`paperless-document-export` updates Paperless's portable export with database
+metadata, documents, and thumbnails.
+
+For recovery, stop Paperless ingestion, restore the latest portable export with
+Paperless's `document_importer`, and start the deployment again. The SQL dumps
+provide a second database-specific recovery path. Protect against NAS failure
+with NAS snapshots and an offsite copy; the export and SQL dumps share the same
+NAS as the live documents.
