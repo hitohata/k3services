@@ -82,6 +82,22 @@ child:
     enabled: false
   env:
     DO_NOT_TRACK: "1"
+  # Netdata's script-discovery plugin watches this directory even when no
+  # custom scripts are installed. Mount an empty directory so the watch does
+  # not emit a "no such file or directory" error every minute.
+  extraVolumes:
+    - name: netdata-scripts-directory
+      emptyDir: {}
+  extraVolumeMounts:
+    - name: netdata-scripts-directory
+      mountPath: /etc/netdata/scripts.d
+  configs:
+    # K3s does not expose the deprecated insecure kube-proxy metrics endpoint
+    # at 127.0.0.1:10249. Keep the collector configuration valid but give it
+    # no jobs, avoiding repeated one-second scrape timeouts.
+    kubeproxy:
+      data: |
+        jobs: []
   persistence:
     enabled: true
     hostPath: /var/lib/netdata-k8s-child
