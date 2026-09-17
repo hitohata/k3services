@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: forgejo-backups
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-client-forgejo
+  resources:
+    requests:
+      storage: 200Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: forgejo-backup
+spec:
+  schedule: "30 4 * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          automountServiceAccountToken: false
+          restartPolicy: OnFailure
+          nodeSelector:
+            kubernetes.io/hostname: n100
+          securityContext:
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+          initContainers:
+            - name: postgresql-dump
+              image: postgres:18.6
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  export PGPASSWORD="$(cat /credentials/password)"
+                  pg_dump --host=forgejo-postgresql --username="$(cat /credentials/username)" --no-owner forgejo | gzip > /staging/forgejo.sql.gz
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: credentials
+                  mountPath: /credentials
+                  readOnly: true
+                - name: staging
+                  mountPath: /staging
+          containers:
+            - name: archive-data
+              image: docker.io/alpine:3.22.1
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  archive="/backups/forgejo-$(date -u +%Y%m%dT%H%M%SZ).tar.gz"
+                  tar -czf "$archive" -C /staging forgejo.sql.gz -C /data .
+                  find /backups -type f -name 'forgejo-*.tar.gz' -mtime +13 -delete
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+                  readOnly: true
+                - name: staging
+                  mountPath: /staging
+                  readOnly: true
+                - name: backups
+                  mountPath: /backups
+          volumes:
+            - name: credentials
+              secret:
+                secretName: forgejo-postgresql-credentials
+            - name: data
+              persistentVolumeClaim:
+                claimName: forgejo-data
+            - name: staging
+              emptyDir: {}
+            - name: backups
+              persistentVolumeClaim:
+                claimName: forgejo-backups

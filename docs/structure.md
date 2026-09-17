@@ -23,9 +23,14 @@ root-app/apps.yaml
 │   └── backup.yaml                     backup PVC and CronJob
 ├── apps/it-tools/
 │   └── deployment.yaml                 stateless application, service and ingress
-└── apps/netdata/
-    ├── values.yaml                     Netdata Helm configuration
-    └── resources/                      restricted cluster RBAC
+├── apps/netdata/
+│   ├── values.yaml                     Netdata Helm configuration
+│   └── resources/                      restricted cluster RBAC
+└── apps/forgejo/
+    ├── values.yaml                     Forgejo Helm configuration
+    ├── postgresql-values.yaml          Forgejo PostgreSQL Helm configuration
+    ├── resources/                      backup PVC and CronJob
+    └── secrets/                        encrypted administrator and database credentials
 ```
 
 The root application references the upstream Nextcloud Helm chart and the
@@ -150,6 +155,22 @@ filesystem mounts, and elevated capabilities to observe each node. These are
 expected permissions for the official chart but make Netdata a
 security-sensitive cluster component.
 
+## Forgejo components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Forgejo | Git forge at `https://forgejo.dejima.men` | K3s `local-path` repository-data PVC |
+| PostgreSQL | Transactional database | K3s `local-path` PVC |
+| Backup CronJob | PostgreSQL dump plus Forgejo data archive | NFS backup PVC |
+
+Forgejo and PostgreSQL are pinned to `n100`. Live repository data and database
+files remain on local storage for Git and PostgreSQL performance. The
+`forgejo-backups` PVC uses `nfs-client-forgejo` and provisions under
+`/Pi-NAS/forgejo/forgejo-backups`. The service is exposed only through the
+TLS-terminating gateway. Initial deployment provides HTTPS Git operations;
+Forgejo SSH and Actions are intentionally disabled pending a separate TCP
+ingress and runner security design.
+
 ## Secrets
 
 Sealed Secrets is deployed in `kube-system`. It decrypts a committed
@@ -175,6 +196,12 @@ PostgreSQL administrator. Generate it with the instructions in
 [apps/mealie/README.md](../apps/mealie/README.md). Rotating either database
 password requires changing the password in PostgreSQL as well as updating the
 SealedSecret.
+
+Forgejo uses separate SealedSecrets for the `forgejo-admin-credentials` and
+`forgejo-postgresql-credentials` Secrets in the `forgejo` namespace. The
+committed secrets contain generated values encrypted for this cluster. Retrieve
+the initial administrator password or reseal replacement credentials with the
+commands in [apps/forgejo/README.md](../apps/forgejo/README.md).
 
 ## Backups and recovery
 
@@ -213,3 +240,12 @@ RSA keys from the data directory.
 To recover, stop Vaultwarden, extract an archive into its data PVC, rename the
 included `db_<timestamp>.sqlite3` file to `db.sqlite3`, and make sure no stale
 `db.sqlite3-wal` or `db.sqlite3-shm` files remain before starting Vaultwarden.
+
+## Forgejo backups and recovery
+
+The `forgejo-backup` CronJob runs daily at 04:30 UTC. It creates a PostgreSQL
+dump, archives it with the Forgejo data directory, and retains 14 archives in
+`/Pi-NAS/forgejo/forgejo-backups`. To recover, stop Forgejo, restore the
+database dump to PostgreSQL, extract the data directory to the `forgejo-data`
+PVC, then start Forgejo. Use NAS snapshots and an offsite copy as protection
+against NAS failure.
