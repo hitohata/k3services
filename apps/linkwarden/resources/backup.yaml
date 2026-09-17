@@ -26,8 +26,6 @@ spec:
         spec:
           automountServiceAccountToken: false
           restartPolicy: OnFailure
-          nodeSelector:
-            kubernetes.io/hostname: n100
           securityContext:
             seccompProfile:
               type: RuntimeDefault

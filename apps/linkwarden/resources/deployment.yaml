@@ -124,8 +124,21 @@ spec:
         app.kubernetes.io/name: linkwarden
     spec:
       automountServiceAccountToken: false
-      nodeSelector:
-        kubernetes.io/hostname: n100
+      # The application data is on NFS, so prefer a node that does not already
+      # host Mealie or Linkwarden while retaining n100 as a fallback.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - mealie
+                        - linkwarden
+                topologyKey: kubernetes.io/hostname
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch

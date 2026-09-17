@@ -46,6 +46,16 @@ parent:
     enabled: false
   env:
     DO_NOT_TRACK: "1"
+  # The image creates its telemetry opt-out marker in /etc/netdata at startup.
+  # Keep the container non-root by providing that directory as a pod-local,
+  # fsGroup-writable volume. The chart's ConfigMap subpath mounts still supply
+  # the managed Netdata configuration files within it.
+  extraVolumes:
+    - name: netdata-config-directory
+      emptyDir: {}
+  extraVolumeMounts:
+    - name: netdata-config-directory
+      mountPath: /etc/netdata
   database:
     persistence: true
     storageclass: local-path

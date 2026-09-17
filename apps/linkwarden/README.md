@@ -1,8 +1,11 @@
 # Linkwarden
 
-Linkwarden, PostgreSQL, and Meilisearch are deployed from this directory and
-are pinned to `n100`. The web application is available through the
-TLS-terminating gateway at `https://linkwarden.dejima.men`.
+Linkwarden, PostgreSQL, and Meilisearch are deployed from this directory.
+PostgreSQL and Meilisearch remain pinned to `n100` because they use
+`local-path`; the NFS-backed Linkwarden web application is schedulable on any
+node and prefers a node that does not already run Mealie or Linkwarden. The web
+application is available through the TLS-terminating gateway at
+`https://linkwarden.dejima.men`.
 
 Before the first sync, copy the credential template to a secure path,
 replace every placeholder, and seal it for this cluster. Repeat this process
