@@ -135,6 +135,20 @@ volumeBindingMode: Immediate
 mountOptions:
   - nfsvers=4
 ---
+# Jellyfin media and configuration backups use dedicated NAS directories.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-client-jellyfin
+provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
+parameters:
+  pathPattern: "jellyfin/${.PVC.name}"
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+mountOptions:
+  - nfsvers=4
+---
 # Forgejo backups use a dedicated directory beneath /Pi-NAS/forgejo.
 apiVersion: storage.k8s.io/v1
 kind: StorageClass

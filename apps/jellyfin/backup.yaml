@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-backups
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-client-jellyfin
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: jellyfin-config-backup
+spec:
+  schedule: "15 4 * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          automountServiceAccountToken: false
+          restartPolicy: OnFailure
+          nodeSelector:
+            kubernetes.io/hostname: n100
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+          initContainers:
+            - name: database-backup
+              image: docker.io/keinos/sqlite3:3.51.2
+              imagePullPolicy: IfNotPresent
+              command:
+                - sqlite3
+              args:
+                - -uri
+                - file:/config/data/jellyfin.db?mode=ro
+                - .backup /staging/jellyfin.db
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+                  readOnly: true
+                - name: staging
+                  mountPath: /staging
+          containers:
+            - name: archive
+              image: docker.io/alpine:3.22.1
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  backup_dir="/backups/jellyfin-$(date -u +%Y%m%dT%H%M%SZ)"
+                  mkdir "$backup_dir"
+                  cp /staging/jellyfin.db "$backup_dir/jellyfin.db"
+                  tar \
+                    --exclude='./data/jellyfin.db' \
+                    --exclude='./data/jellyfin.db-shm' \
+                    --exclude='./data/jellyfin.db-wal' \
+                    -czf "$backup_dir/config.tar.gz" \
+                    -C /config .
+                  find /backups -mindepth 1 -maxdepth 1 -type d -name 'jellyfin-*' -mtime +13 -exec rm -rf {} +
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+                  readOnly: true
+                - name: staging
+                  mountPath: /staging
+                  readOnly: true
+                - name: backups
+                  mountPath: /backups
+          volumes:
+            - name: config
+              persistentVolumeClaim:
+                claimName: jellyfin-config
+            - name: staging
+              emptyDir: {}
+            - name: backups
+              persistentVolumeClaim:
+                claimName: jellyfin-backups
