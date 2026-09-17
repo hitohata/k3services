@@ -265,3 +265,38 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+# paperless-ngx
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: paperless
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: postgresql
+      targetRevision: 18.11.3
+      helm:
+        releaseName: paperless-postgresql
+        valueFiles:
+          - $values/apps/paperless/postgresql-values.yaml
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      ref: values
+      path: apps/paperless/resources
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      path: apps/paperless/secrets
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: paperless
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
