@@ -1,0 +1,44 @@
+- Productivity:
+    - Nextcloud:
+        icon: nextcloud.png
+        href: https://nextcloud.dejima.men
+        description: Files and collaboration
+    - Mealie:
+        icon: mealie.png
+        href: https://mealie.dejima.men
+        description: Recipes and meal planning
+    - Paperless:
+        icon: paperless.png
+        href: https://paperless.dejima.men
+        description: Document archive
+    - Linkwarden:
+        icon: linkwarden.png
+        href: https://linkwarden.dejima.men
+        description: Bookmark archive
+    - Vaultwarden:
+        icon: vaultwarden.png
+        href: https://vaultwarden.dejima.men
+        description: Password manager
+    - Stirling PDF:
+        icon: stirling-pdf.png
+        href: https://stirling-pdf.dejima.men
+        description: PDF tools
+- Media:
+    - Jellyfin:
+        icon: jellyfin.png
+        href: https://jellyfin.dejima.men
+        description: Media server
+- Development:
+    - Forgejo:
+        icon: forgejo.png
+        href: https://forgejo.dejima.men
+        description: Source code hosting
+    - IT-Tools:
+        icon: it-tools.png
+        href: https://it-tools.dejima.men
+        description: Utilities for developers
+- Infrastructure:
+    - Netdata:
+        icon: netdata.png
+        href: https://netdata.dejima.men
+        description: System monitoring
