@@ -21,8 +21,11 @@ root-app/apps.yaml
 ├── apps/vaultwarden/
 │   ├── deployment.yaml                 application, storage, service and ingress
 │   └── backup.yaml                     backup PVC and CronJob
-└── apps/it-tools/
-    └── deployment.yaml                 stateless application, service and ingress
+├── apps/it-tools/
+│   └── deployment.yaml                 stateless application, service and ingress
+└── apps/netdata/
+    ├── values.yaml                     Netdata Helm configuration
+    └── resources/                      restricted cluster RBAC
 ```
 
 The root application references the upstream Nextcloud Helm chart and the
@@ -121,6 +124,31 @@ IT-Tools is a stateless application pinned to `n100`. Its preferences and
 favorites remain in the browser, so the deployment does not require a PVC or a
 backup job. The container image is pinned to the upstream stable release rather
 than the moving `latest` tag.
+
+## Netdata components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Parent | Central metrics database and dashboard at `http://netdata.n100.lan` | K3s `local-path` database and state PVCs |
+| Child DaemonSet | Host and container metrics collector on every cluster node | Per-node host path for stable identity |
+| Kubernetes-state collector | Kubernetes object-state metrics | K3s `local-path` state PVC |
+
+The official Netdata chart is pinned to version `3.7.174`. The parent and
+Kubernetes-state pods are pinned to `n100`; child collectors run on every node
+and stream their metrics to the parent. Live metric storage remains on
+`n100`'s local disk for query performance. It is operational monitoring data,
+so it is not included in the NAS backup scheme.
+
+The dashboard is deliberately exposed only on the LAN because Netdata does not
+have an authentication middleware configured in this cluster. Cloud claiming
+and anonymous telemetry are disabled. The optional service-discovery sidecar is
+also disabled so Netdata can use the restricted read-only RBAC in
+`apps/netdata/resources/rbac.yaml`, which cannot read Kubernetes Secrets.
+
+Netdata's child collectors require host PID, IPC and network access, host
+filesystem mounts, and elevated capabilities to observe each node. These are
+expected permissions for the official chart but make Netdata a
+security-sensitive cluster component.
 
 ## Secrets
 

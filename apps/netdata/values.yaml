@@ -1,0 +1,116 @@
+# Netdata's parent retains cluster metrics, while a child DaemonSet collects
+# host and container metrics from every node.
+image:
+  pullPolicy: IfNotPresent
+
+# The persistence init container only fixes permissions on each child's
+# node-local identity directory. Pin it instead of using the chart's `latest`.
+initContainersImage:
+  repository: alpine
+  tag: "3.24.1"
+  pullPolicy: IfNotPresent
+
+ingress:
+  enabled: true
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  pathType: Prefix
+  hosts:
+    - netdata.n100.lan
+  spec:
+    ingressClassName: traefik
+
+# PodSecurityPolicy was removed from current Kubernetes releases.
+rbac:
+  create: false
+  pspEnabled: false
+
+serviceAccount:
+  create: true
+  name: netdata
+
+# Disable the optional discovery sidecar so Netdata does not need permission to
+# list Secrets or ConfigMaps across the cluster. Core node and workload metrics
+# remain enabled through the child and Kubernetes-state collectors.
+sd:
+  image:
+    pullPolicy: IfNotPresent
+  child:
+    enabled: false
+
+parent:
+  nodeSelector:
+    kubernetes.io/hostname: n100
+  claiming:
+    enabled: false
+  env:
+    DO_NOT_TRACK: "1"
+  database:
+    persistence: true
+    storageclass: local-path
+    volumesize: 15Gi
+  alarms:
+    persistence: true
+    storageclass: local-path
+    volumesize: 1Gi
+  livenessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+  readinessProbe:
+    initialDelaySeconds: 10
+    timeoutSeconds: 5
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 2Gi
+
+child:
+  claiming:
+    enabled: false
+  env:
+    DO_NOT_TRACK: "1"
+  persistence:
+    enabled: true
+    hostPath: /var/lib/netdata-k8s-child
+  livenessProbe:
+    initialDelaySeconds: 20
+    timeoutSeconds: 5
+  readinessProbe:
+    initialDelaySeconds: 10
+    timeoutSeconds: 5
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+k8sState:
+  nodeSelector:
+    kubernetes.io/hostname: n100
+  claiming:
+    enabled: false
+  env:
+    DO_NOT_TRACK: "1"
+  persistence:
+    enabled: true
+    storageclass: local-path
+    volumesize: 1Gi
+  livenessProbe:
+    initialDelaySeconds: 20
+    timeoutSeconds: 5
+  readinessProbe:
+    initialDelaySeconds: 10
+    timeoutSeconds: 5
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+otel-collector:
+  enabled: false
