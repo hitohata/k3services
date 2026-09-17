@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vaultwarden-backups
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-client-vaultwarden
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vaultwarden-backup
+spec:
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          automountServiceAccountToken: false
+          restartPolicy: OnFailure
+          nodeSelector:
+            kubernetes.io/hostname: n100
+          securityContext:
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: backup
+              image: ghcr.io/dani-garcia/vaultwarden:1.37.3
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  find /data -maxdepth 1 -type f -name 'db_*.sqlite3' -delete
+                  /vaultwarden backup
+                  archive="/backups/vaultwarden-$(date -u +%Y%m%dT%H%M%SZ).tar.gz"
+                  tar \
+                    --exclude='./db.sqlite3' \
+                    --exclude='./db.sqlite3-shm' \
+                    --exclude='./db.sqlite3-wal' \
+                    -czf "$archive" -C /data .
+                  find /data -maxdepth 1 -type f -name 'db_*.sqlite3' -delete
+                  find /backups -type f -name 'vaultwarden-*.tar.gz' -mtime +13 -delete
+              env:
+                - name: DATA_FOLDER
+                  value: /data
+                - name: DATABASE_URL
+                  value: sqlite:///data/db.sqlite3
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+                - name: backups
+                  mountPath: /backups
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: vaultwarden-data
+            - name: backups
+              persistentVolumeClaim:
+                claimName: vaultwarden-backups
