@@ -13,11 +13,14 @@ root-app/apps.yaml
 ├── apps/nextcloud/
 │   ├── values.yaml                     Nextcloud Helm configuration
 │   └── secrets/                        encrypted Nextcloud credentials
-└── apps/mealie/
-    ├── values.yaml                     Mealie Helm configuration
-    ├── postgresql-values.yaml          Mealie PostgreSQL Helm configuration
-    ├── resources/                      backup PVC and CronJob
-    └── secrets/                        encrypted PostgreSQL credentials
+├── apps/mealie/
+│   ├── values.yaml                     Mealie Helm configuration
+│   ├── postgresql-values.yaml          Mealie PostgreSQL Helm configuration
+│   ├── resources/                      backup PVC and CronJob
+│   └── secrets/                        encrypted PostgreSQL credentials
+└── apps/vaultwarden/
+    ├── deployment.yaml                 application, storage, service and ingress
+    └── backup.yaml                     backup PVC and CronJob
 ```
 
 The root application references the upstream Nextcloud Helm chart and the
@@ -84,6 +87,28 @@ Mealie has no upstream Helm chart. The deployment is rendered from the pinned
 image pinned in `apps/mealie/values.yaml`. PostgreSQL is a separate pinned
 Bitnami Helm source within the same Argo CD Application.
 
+## Vaultwarden components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Vaultwarden | Bitwarden-compatible password manager at `https://vaultwarden.dejima.men` | K3s `local-path` data PVC |
+| Backup CronJob | Daily SQLite-consistent full-data archive | NFS backup PVC |
+
+Vaultwarden is pinned to `n100`. Its live SQLite database stays on the node's
+local disk rather than on NFS. At 03:00 UTC, the backup job uses Vaultwarden's
+built-in database backup command and archives that snapshot together with the
+rest of `/data`. Backups use the dedicated `nfs-client-vaultwarden`
+StorageClass and are retained for 14 days:
+
+```text
+/Pi-NAS/vaultwarden/
+└── vaultwarden-backups/  # daily full-data archives
+```
+
+The gateway terminates TLS before forwarding traffic to Traefik. HTTPS is
+required because the Vaultwarden web vault relies on browser cryptography APIs
+that are unavailable in an insecure HTTP context.
+
 ## Secrets
 
 Sealed Secrets is deployed in `kube-system`. It decrypts a committed
@@ -135,3 +160,15 @@ gzip-compressed plain SQL dump and retains 14 daily dumps in
 database dump and the `/Pi-NAS/mealie/mealie-data` directory. Restore the
 database with `gunzip -c <dump> | psql` against a stopped or maintenance-mode
 Mealie deployment, then restore the application-data directory.
+
+## Vaultwarden backups and recovery
+
+The `vaultwarden-backup` CronJob creates
+`vaultwarden-<UTC timestamp>.tar.gz` each day and retains 14 archives. Each
+archive excludes the live SQLite/WAL files and includes a consistent
+`db_<timestamp>.sqlite3` snapshot plus attachments, sends, configuration and
+RSA keys from the data directory.
+
+To recover, stop Vaultwarden, extract an archive into its data PVC, rename the
+included `db_<timestamp>.sqlite3` file to `db.sqlite3`, and make sure no stale
+`db.sqlite3-wal` or `db.sqlite3-shm` files remain before starting Vaultwarden.
