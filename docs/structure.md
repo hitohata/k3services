@@ -6,6 +6,10 @@
 Argo CD `Application`, which in turn deploys an application or infrastructure
 component from this repository or an external Helm chart.
 
+The `argocd-crds` application manages the upstream Argo CD CRDs pinned to the
+version of the directly installed Argo CD controllers. It does not prune CRDs:
+removing a cluster API type can also remove its custom resources.
+
 ```text
 root-app/apps.yaml
 ├── infrastructure/nfs-provisioner     NFS dynamic provisioning

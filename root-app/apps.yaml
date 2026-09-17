@@ -1,4 +1,29 @@
-#  nginx-test
+# Argo CD CRDs
+# Keep the CRDs aligned with the directly installed Argo CD v3.5.2 controllers.
+# Pruning is intentionally disabled: deleting this Application must never remove
+# cluster API types and their persisted custom resources.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-crds
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/argoproj/argo-cd.git
+    targetRevision: v3.5.2
+    path: manifests/crds
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+---
+# nginx-test
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
