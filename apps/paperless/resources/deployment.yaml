@@ -119,6 +119,11 @@ spec:
             capabilities:
               drop:
                 - ALL
+            # Avoid the image entrypoint's root-only chown of /data. The pod
+            # fsGroup below keeps the local-path volume writable by Valkey.
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
           volumeMounts:
             - name: data
               mountPath: /data
