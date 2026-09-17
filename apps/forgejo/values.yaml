@@ -1,0 +1,101 @@
+fullnameOverride: forgejo
+
+image:
+  registry: code.forgejo.org
+  repository: forgejo/forgejo
+  tag: 15.0.8
+  # The chart appends -rootless to this tag.
+  rootless: true
+  pullPolicy: IfNotPresent
+
+strategy:
+  type: Recreate
+
+podSecurityContext:
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+nodeSelector:
+  kubernetes.io/hostname: n100
+
+persistence:
+  enabled: true
+  create: true
+  claimName: forgejo-data
+  size: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClass: local-path
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    memory: 2Gi
+
+serviceAccount:
+  create: false
+  automountServiceAccountToken: false
+
+test:
+  enabled: false
+
+service:
+  ssh:
+    type: ClusterIP
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  hosts:
+    - host: forgejo.dejima.men
+      paths:
+        - path: /
+          pathType: Prefix
+          port: http
+
+gitea:
+  admin:
+    existingSecret: forgejo-admin-credentials
+    passwordMode: initialOnlyRequireReset
+  additionalConfigFromEnvs:
+    - name: FORGEJO__DATABASE__PASSWD
+      valueFrom:
+        secretKeyRef:
+          name: forgejo-postgresql-credentials
+          key: password
+  config:
+    server:
+      ROOT_URL: https://forgejo.dejima.men/
+      DOMAIN: forgejo.dejima.men
+      SSH_DOMAIN: forgejo.dejima.men
+      DISABLE_SSH: true
+      START_SSH_SERVER: false
+    database:
+      DB_TYPE: postgres
+      HOST: forgejo-postgresql:5432
+      NAME: forgejo
+      USER: forgejo
+      SSL_MODE: disable
+    session:
+      PROVIDER: db
+    service:
+      DISABLE_REGISTRATION: true
+    actions:
+      ENABLED: false
+    indexer:
+      REPO_INDEXER_ENABLED: true

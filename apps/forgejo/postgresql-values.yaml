@@ -1,0 +1,32 @@
+fullnameOverride: forgejo-postgresql
+architecture: standalone
+
+# The chart defaults to the moving `latest` tag. Pin its multi-architecture
+# manifest so reconciliation remains reproducible.
+image:
+  digest: sha256:b69d1fca390fb131639e86e820f248acfc5d911339dc884796f8009260c598d7
+
+auth:
+  enablePostgresUser: true
+  username: forgejo
+  database: forgejo
+  existingSecret: forgejo-postgresql-credentials
+  secretKeys:
+    adminPasswordKey: postgres-password
+    userPasswordKey: password
+
+primary:
+  nodeSelector:
+    kubernetes.io/hostname: n100
+  persistence:
+    enabled: true
+    storageClass: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
