@@ -12,7 +12,11 @@ initContainersImage:
 
 ingress:
   enabled: true
+  # The chart otherwise defaults its legacy annotation to nginx, which
+  # conflicts with the Traefik ingressClassName below on current Kubernetes.
+  className: traefik
   annotations:
+    kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.entrypoints: web
   path: /
   pathType: Prefix
