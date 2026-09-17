@@ -422,3 +422,27 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+# stirling-pdf
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: stirling-pdf
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hitohata/k3services
+    targetRevision: HEAD
+    path: apps/stirling-pdf
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: stirling-pdf
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

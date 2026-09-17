@@ -39,9 +39,11 @@ root-app/apps.yaml
 │   ├── postgresql-values.yaml          Forgejo PostgreSQL Helm configuration
 │   ├── resources/                      backup PVC and CronJob
 │   └── secrets/                        encrypted administrator and database credentials
-└── apps/jellyfin/
-    ├── deployment.yaml                 media server, storage, service and ingress
-    └── backup.yaml                     configuration backup PVC and CronJob
+├── apps/jellyfin/
+│   ├── deployment.yaml                 media server, storage, service and ingress
+│   └── backup.yaml                     configuration backup PVC and CronJob
+└── apps/stirling-pdf/
+    └── deployment.yaml                 application, configuration storage, service and ingress
 ```
 
 The root application references the upstream Nextcloud Helm chart and the
@@ -253,6 +255,19 @@ consume, export, and database-backup areas use `nfs-client-paperless`:
 The consume directory uses polling because native filesystem notifications are
 not reliable on NFS. The public URL is only exposed through the TLS-terminating
 gateway; Paperless is configured to trust the forwarded HTTPS scheme.
+
+## Stirling PDF components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Stirling PDF | PDF editing and conversion at `https://stirling-pdf.dejima.men`; direct LAN alias `http://stirling-pdf.n100.lan` | K3s `local-path` configuration PVC |
+
+Stirling PDF is pinned to `n100`. Its configuration, including settings saved
+from the web UI, persists on `local-path`; uploaded documents, temporary work
+files, and logs are deliberately ephemeral. The application does not enable
+Stirling's optional account system, so gateway access must be limited to trusted
+users. The gateway terminates TLS and the application trusts its forwarded
+headers for the public HTTPS route.
 
 ## Secrets
 
