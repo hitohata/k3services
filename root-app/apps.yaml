@@ -22,6 +22,11 @@ spec:
     automated:
       prune: false
       selfHeal: true
+    # The ApplicationSet CRD exceeds Kubernetes' client-side apply annotation
+    # limit. Server-side apply records field ownership without storing the full
+    # manifest in kubectl.kubernetes.io/last-applied-configuration.
+    syncOptions:
+      - ServerSideApply=true
 ---
 # nginx-test
 apiVersion: argoproj.io/v1alpha1
