@@ -13,6 +13,7 @@ removing a cluster API type can also remove its custom resources.
 ```text
 root-app/apps.yaml
 ├── infrastructure/nfs-provisioner     NFS dynamic provisioning
+├── apps/homepage/                     service dashboard
 ├── sealed-secrets Helm chart           encrypted-secret controller
 ├── apps/nextcloud/
 │   ├── values.yaml                     Nextcloud Helm configuration
