@@ -61,7 +61,7 @@ time.
 
 | Component | Purpose | Storage |
 | --- | --- | --- |
-| Nextcloud | Web application at `http://nextcloud.n100.lan` | local config PVC; NFS data PVC |
+| Nextcloud | HTTPS through the gateway at `https://nextcloud.dejima.men`; direct LAN alias `http://nextcloud.n100.lan` | local config PVC; NFS data PVC |
 | MariaDB | Nextcloud's transactional database | K3s `local-path` PVC |
 | Redis | Cache and file locking | Ephemeral; no PVC |
 | CronJob | Runs `cron.php` every five minutes | Uses Nextcloud PVCs |
@@ -94,7 +94,7 @@ other applications.
 
 | Component | Purpose | Storage |
 | --- | --- | --- |
-| Mealie | Recipe, meal-planning, and shopping-list web application at `http://mealie.n100.lan` | NFS application-data PVC |
+| Mealie | HTTPS through the gateway at `https://mealie.dejima.men`; direct LAN alias `http://mealie.n100.lan` | NFS application-data PVC |
 | PostgreSQL | Mealie's transactional database | K3s `local-path` PVC |
 | Backup CronJob | Daily compressed PostgreSQL dump | NFS backup PVC |
 
@@ -153,7 +153,7 @@ than the moving `latest` tag.
 
 | Component | Purpose | Storage |
 | --- | --- | --- |
-| Parent | Central metrics database and dashboard at `http://netdata.n100.lan` | K3s `local-path` database and state PVCs |
+| Parent | HTTPS through the gateway at `https://netdata.dejima.men`; direct LAN alias `http://netdata.n100.lan` | K3s `local-path` database and state PVCs |
 | Child DaemonSet | Host and container metrics collector on every cluster node | Per-node host path for stable identity |
 | Kubernetes-state collector | Kubernetes object-state metrics | K3s `local-path` state PVC |
 

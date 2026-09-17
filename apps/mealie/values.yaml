@@ -27,8 +27,13 @@ affinity:
 ingress:
   enabled: true
   className: traefik
-  annotations: {}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
   hosts:
+    - host: mealie.dejima.men
+      paths:
+        - path: /
+          pathType: Prefix
     - host: mealie.n100.lan
       paths:
         - path: /
@@ -43,7 +48,7 @@ persistence:
 
 env:
   TZ: America/Vancouver
-  BASE_URL: http://mealie.n100.lan
+  BASE_URL: https://mealie.dejima.men
   DEFAULT_GROUP: Home
   DEFAULT_HOUSEHOLD: Family
   ALLOW_SIGNUP: "false"

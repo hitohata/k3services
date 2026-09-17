@@ -17,6 +17,7 @@ ingress:
   path: /
   pathType: Prefix
   hosts:
+    - netdata.dejima.men
     - netdata.n100.lan
   spec:
     ingressClassName: traefik
