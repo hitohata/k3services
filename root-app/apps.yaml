@@ -387,3 +387,38 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+# linkwarden
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: linkwarden
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: postgresql
+      targetRevision: 18.11.3
+      helm:
+        releaseName: linkwarden-postgresql
+        valueFiles:
+          - $values/apps/linkwarden/postgresql-values.yaml
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      ref: values
+      path: apps/linkwarden/resources
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      path: apps/linkwarden/secrets
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: linkwarden
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

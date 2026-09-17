@@ -1,0 +1,32 @@
+fullnameOverride: linkwarden-postgresql
+architecture: standalone
+
+# The chart currently defaults to the moving `latest` tag. Pin its
+# multi-architecture manifest so chart reconciliation remains reproducible.
+image:
+  digest: sha256:b69d1fca390fb131639e86e820f248acfc5d911339dc884796f8009260c598d7
+
+auth:
+  enablePostgresUser: true
+  username: linkwarden
+  database: linkwarden
+  existingSecret: linkwarden-credentials
+  secretKeys:
+    adminPasswordKey: postgres-password
+    userPasswordKey: db-password
+
+primary:
+  nodeSelector:
+    kubernetes.io/hostname: n100
+  persistence:
+    enabled: true
+    storageClass: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
