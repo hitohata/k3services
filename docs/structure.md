@@ -23,9 +23,12 @@ root-app/apps.yaml
 │   └── backup.yaml                     backup PVC and CronJob
 ├── apps/it-tools/
 │   └── deployment.yaml                 stateless application, service and ingress
-└── apps/netdata/
+├── apps/netdata/
     ├── values.yaml                     Netdata Helm configuration
-    └── resources/                      restricted cluster RBAC
+│   └── resources/                      restricted cluster RBAC
+└── apps/jellyfin/
+    ├── deployment.yaml                 media server, storage, service and ingress
+    └── backup.yaml                     configuration backup PVC and CronJob
 ```
 
 The root application references the upstream Nextcloud Helm chart and the
@@ -150,6 +153,28 @@ filesystem mounts, and elevated capabilities to observe each node. These are
 expected permissions for the official chart but make Netdata a
 security-sensitive cluster component.
 
+## Jellyfin components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Jellyfin | Media server at `https://jellyfin.dejima.men`; LAN alias `http://jellyfin.n100.lan` | local configuration and cache PVCs; read-only NFS media PVC |
+| Backup CronJob | Daily SQLite-consistent configuration backup | NFS backup PVC |
+
+Jellyfin is pinned to `n100`. Its configuration database and cache remain on
+the node's local storage for SQLite and transcoding performance. Media is
+provided through a dedicated NAS directory and mounted read-only at `/media`,
+so the service cannot modify the library:
+
+```text
+/Pi-NAS/jellyfin/
+├── jellyfin-media/    # media library; add files through the NAS
+└── jellyfin-backups/  # daily configuration/database backups
+```
+
+The deployment intentionally does not mount GPU devices or enable hardware
+transcoding. Direct play works normally; enable hardware acceleration later
+only with a suitable Kubernetes device plugin and reviewed device permissions.
+
 ## Secrets
 
 Sealed Secrets is deployed in `kube-system`. It decrypts a committed
@@ -213,3 +238,13 @@ RSA keys from the data directory.
 To recover, stop Vaultwarden, extract an archive into its data PVC, rename the
 included `db_<timestamp>.sqlite3` file to `db.sqlite3`, and make sure no stale
 `db.sqlite3-wal` or `db.sqlite3-shm` files remain before starting Vaultwarden.
+
+## Jellyfin backups and recovery
+
+The `jellyfin-config-backup` CronJob runs daily at 04:15 UTC. It uses SQLite's
+online backup command for `jellyfin.db`, archives the remaining configuration,
+and retains 14 backups in `/Pi-NAS/jellyfin/jellyfin-backups`. To recover,
+stop Jellyfin, restore `jellyfin.db` into the configuration PVC's `data`
+directory, extract `config.tar.gz` over the configuration PVC, then start the
+deployment. Media is not duplicated by this job because the source library is
+already on the NAS; protect it with NAS snapshots and an offsite copy.

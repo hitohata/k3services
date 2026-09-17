@@ -265,3 +265,27 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+# jellyfin
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jellyfin
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hitohata/k3services
+    targetRevision: HEAD
+    path: apps/jellyfin
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: jellyfin
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
