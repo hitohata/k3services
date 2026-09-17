@@ -18,9 +18,11 @@ root-app/apps.yaml
 │   ├── postgresql-values.yaml          Mealie PostgreSQL Helm configuration
 │   ├── resources/                      backup PVC and CronJob
 │   └── secrets/                        encrypted PostgreSQL credentials
-└── apps/vaultwarden/
-    ├── deployment.yaml                 application, storage, service and ingress
-    └── backup.yaml                     backup PVC and CronJob
+├── apps/vaultwarden/
+│   ├── deployment.yaml                 application, storage, service and ingress
+│   └── backup.yaml                     backup PVC and CronJob
+└── apps/it-tools/
+    └── deployment.yaml                 stateless application, service and ingress
 ```
 
 The root application references the upstream Nextcloud Helm chart and the
@@ -108,6 +110,17 @@ StorageClass and are retained for 14 days:
 The gateway terminates TLS before forwarding traffic to Traefik. HTTPS is
 required because the Vaultwarden web vault relies on browser cryptography APIs
 that are unavailable in an insecure HTTP context.
+
+## IT-Tools components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| IT-Tools | Browser-based utilities at `https://it-tools.dejima.men`; direct LAN alias `http://it-tools.n100.lan` | None |
+
+IT-Tools is a stateless application pinned to `n100`. Its preferences and
+favorites remain in the browser, so the deployment does not require a PVC or a
+backup job. The container image is pinned to the upstream stable release rather
+than the moving `latest` tag.
 
 ## Secrets
 
