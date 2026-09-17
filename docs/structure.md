@@ -23,9 +23,13 @@ root-app/apps.yaml
 │   └── backup.yaml                     backup PVC and CronJob
 ├── apps/it-tools/
 │   └── deployment.yaml                 stateless application, service and ingress
-└── apps/netdata/
-    ├── values.yaml                     Netdata Helm configuration
-    └── resources/                      restricted cluster RBAC
+├── apps/netdata/
+│   ├── values.yaml                     Netdata Helm configuration
+│   └── resources/                      restricted cluster RBAC
+└── apps/linkwarden/
+    ├── postgresql-values.yaml           PostgreSQL Helm configuration
+    ├── resources/                       Linkwarden, Meilisearch, and backup manifests
+    └── secrets/                         encrypted Linkwarden credentials
 ```
 
 The root application references the upstream Nextcloud Helm chart and the
@@ -149,6 +153,31 @@ Netdata's child collectors require host PID, IPC and network access, host
 filesystem mounts, and elevated capabilities to observe each node. These are
 expected permissions for the official chart but make Netdata a
 security-sensitive cluster component.
+
+## Linkwarden components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Linkwarden | Collaborative bookmark manager at `https://linkwarden.dejima.men` | NFS archive PVC |
+| PostgreSQL | Linkwarden's transactional database | K3s `local-path` PVC |
+| Meilisearch | Full-text search index | K3s `local-path` PVC |
+| Backup CronJob | Daily compressed PostgreSQL dump | NFS backup PVC |
+
+Linkwarden, PostgreSQL, and Meilisearch are pinned to `n100`. Link archives
+and database dumps use the dedicated `nfs-client-linkwarden` StorageClass,
+which stores them below the NAS path:
+
+```text
+/Pi-NAS/linkwarden/
+├── linkwarden-data/     # archived pages and uploads
+└── linkwarden-backups/  # daily PostgreSQL dumps
+```
+
+PostgreSQL and Meilisearch data remain on `n100`'s local disk for database
+and index performance. The `linkwarden-postgresql-backup` CronJob runs daily
+at 03:30 UTC, retains 14 days of dumps, and is the recovery path for the
+transactional database. The archive PVC must be restored alongside a matching
+database dump for a complete recovery.
 
 ## Secrets
 
