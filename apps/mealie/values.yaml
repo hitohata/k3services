@@ -7,8 +7,22 @@ image:
   tag: v3.26.0
   pullPolicy: IfNotPresent
 
-nodeSelector:
-  kubernetes.io/hostname: n100
+# Keep this NFS-backed web pod flexible.  Prefer a node that does not already
+# run Mealie or Linkwarden, but allow n100 as a fallback when no other node is
+# available.
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - mealie
+                  - linkwarden
+          topologyKey: kubernetes.io/hostname
 
 ingress:
   enabled: true

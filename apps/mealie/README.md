@@ -2,8 +2,9 @@
 
 Mealie is deployed by the Helm sources declared in `root-app/apps.yaml`.
 Application settings are in `values.yaml`; PostgreSQL settings are in
-`postgresql-values.yaml`. Both the application and its PostgreSQL database are
-pinned to `n100`.
+`postgresql-values.yaml`. PostgreSQL remains pinned to `n100` because it uses
+`local-path`; the NFS-backed Mealie application is schedulable on any node and
+prefers a node that does not already run Mealie or Linkwarden.
 
 Before syncing the application, create the encrypted database credentials:
 

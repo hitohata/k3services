@@ -24,8 +24,6 @@ spec:
       template:
         spec:
           restartPolicy: OnFailure
-          nodeSelector:
-            kubernetes.io/hostname: n100
           containers:
             - name: postgresql-dump
               image: postgres:18.6

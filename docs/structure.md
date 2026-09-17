@@ -94,10 +94,12 @@ other applications.
 | PostgreSQL | Mealie's transactional database | K3s `local-path` PVC |
 | Backup CronJob | Daily compressed PostgreSQL dump | NFS backup PVC |
 
-The Mealie application and PostgreSQL are both pinned to `n100`. PostgreSQL is
-deliberately not stored on the NAS; its live data is tied to `n100`, and the
-daily database dump is the recovery path. The Mealie application data and the
-database backups use the dedicated `nfs-client-mealie` StorageClass:
+PostgreSQL is pinned to `n100` because it uses `local-path`; its live data is
+not stored on the NAS, and the daily database dump is the recovery path. The
+Mealie application and its backup job use NFS and may run on any node. The
+application prefers a node that does not already run Mealie or Linkwarden. The
+application data and database backups use the dedicated
+`nfs-client-mealie` StorageClass:
 
 ```text
 /Pi-NAS/mealie/
@@ -177,9 +179,11 @@ security-sensitive cluster component.
 | Meilisearch | Full-text search index | K3s `local-path` PVC |
 | Backup CronJob | Daily compressed PostgreSQL dump | NFS backup PVC |
 
-Linkwarden, PostgreSQL, and Meilisearch are pinned to `n100`. Link archives
-and database dumps use the dedicated `nfs-client-linkwarden` StorageClass,
-which stores them below the NAS path:
+PostgreSQL and Meilisearch are pinned to `n100` because they use `local-path`.
+The NFS-backed Linkwarden application and backup job may run on any node; the
+application prefers a node that does not already run Mealie or Linkwarden.
+Link archives and database dumps use the dedicated
+`nfs-client-linkwarden` StorageClass, which stores them below the NAS path:
 
 ```text
 /Pi-NAS/linkwarden/
