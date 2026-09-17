@@ -59,10 +59,14 @@ spec:
             - name: config
               mountPath: /app/config
               readOnly: true
+            - name: logs
+              mountPath: /app/config/logs
       volumes:
         - name: config
           configMap:
             name: homepage
+        - name: logs
+          emptyDir: {}
       restartPolicy: Always
 ---
 apiVersion: v1
