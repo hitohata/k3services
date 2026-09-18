@@ -162,6 +162,9 @@ spec:
         app.kubernetes.io/name: paperless
     spec:
       automountServiceAccountToken: false
+      # Avoid Kubernetes-generated PAPERLESS_PORT=tcp://... taking precedence
+      # over Paperless's numeric HTTP port setting.
+      enableServiceLinks: false
       nodeSelector:
         kubernetes.io/hostname: n100
       securityContext:
