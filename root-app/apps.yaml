@@ -70,6 +70,69 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
+# authentik secrets
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik-secrets
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hitohata/k3services
+    targetRevision: HEAD
+    path: apps/authentik/secrets
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authentik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+# authentik
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.goauthentik.io
+      chart: authentik
+      targetRevision: 2026.8.3
+      helm:
+        releaseName: authentik
+        valueFiles:
+          - $values/apps/authentik/values.yaml
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: postgresql
+      targetRevision: 18.11.3
+      helm:
+        releaseName: authentik-postgresql
+        valueFiles:
+          - $values/apps/authentik/postgresql-values.yaml
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      ref: values
+      path: apps/authentik/resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authentik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
 # nfs-provisioner
 apiVersion: argoproj.io/v1alpha1
 kind: Application

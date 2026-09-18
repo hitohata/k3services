@@ -38,6 +38,10 @@
         href: https://it-tools.dejima.men
         description: Utilities for developers
 - Infrastructure:
+    - Authentik:
+        icon: authentik.png
+        href: https://authentik.dejima.men
+        description: Identity and access management
     - Netdata:
         icon: netdata.png
         href: https://netdata.dejima.men
