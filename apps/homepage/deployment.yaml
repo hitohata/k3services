@@ -19,6 +19,24 @@ spec:
       securityContext:
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        - name: copy-config
+          image: busybox:1.37.0
+          command:
+            - sh
+            - -c
+            - cp -a /config-source/. /app/config/
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config-source
+              mountPath: /config-source
+              readOnly: true
+            - name: config
+              mountPath: /app/config
       containers:
         - name: homepage
           image: ghcr.io/gethomepage/homepage:v2.4.0
@@ -58,14 +76,11 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /app/config
-              readOnly: true
-            - name: logs
-              mountPath: /app/config/logs
       volumes:
-        - name: config
+        - name: config-source
           configMap:
             name: homepage
-        - name: logs
+        - name: config
           emptyDir: {}
       restartPolicy: Always
 ---
