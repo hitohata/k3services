@@ -13,6 +13,7 @@ removing a cluster API type can also remove its custom resources.
 ```text
 root-app/apps.yaml
 ├── infrastructure/nfs-provisioner     NFS dynamic provisioning
+├── apps/authentik/                    identity and access management
 ├── apps/homepage/                     service dashboard
 ├── sealed-secrets Helm chart           encrypted-secret controller
 ├── apps/nextcloud/
@@ -57,6 +58,26 @@ This requires Argo CD 2.6 or later. The release is pinned to chart version
 `9.2.5`. Updating that version is an intentional maintenance change: read the
 chart release notes and upgrade Nextcloud by no more than one major version at a
 time.
+
+## Authentik components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Authentik server and worker | Identity provider at `https://authentik.dejima.men`; direct LAN alias `http://authentik.n100.lan` | Stateless |
+| PostgreSQL | Authentik's transactional database | K3s `local-path` PVC on `n100` |
+| Backup CronJob | Daily compressed PostgreSQL dump | NFS backup PVC |
+
+Authentik is rendered from the official Helm chart pinned to `2026.8.3`. Its
+server and worker run without Kubernetes API credentials; enable a dedicated
+service account only when managed Kubernetes outposts are deliberately
+configured. PostgreSQL stays on `n100` for database performance, and the daily
+backup is retained for 14 days under the dedicated `nfs-client-authentik`
+StorageClass:
+
+```text
+/Pi-NAS/authentik/
+└── authentik-backups/  # daily PostgreSQL dumps
+```
 
 ## Nextcloud components
 

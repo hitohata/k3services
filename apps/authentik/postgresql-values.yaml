@@ -1,0 +1,27 @@
+fullnameOverride: authentik-postgresql
+architecture: standalone
+
+auth:
+  enablePostgresUser: true
+  username: authentik
+  database: authentik
+  existingSecret: authentik-credentials
+  secretKeys:
+    adminPasswordKey: postgres-password
+    userPasswordKey: AUTHENTIK_POSTGRESQL__PASSWORD
+
+primary:
+  nodeSelector:
+    kubernetes.io/hostname: n100
+  persistence:
+    enabled: true
+    storageClass: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi

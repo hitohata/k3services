@@ -1,0 +1,81 @@
+fullnameOverride: authentik
+
+global:
+  image:
+    repository: ghcr.io/goauthentik/server
+    tag: 2026.8.3
+    pullPolicy: IfNotPresent
+
+authentik:
+  existingSecret:
+    secretName: authentik-credentials
+  error_reporting:
+    enabled: false
+  postgresql:
+    host: authentik-postgresql
+    name: authentik
+    user: authentik
+    port: 5432
+
+postgresql:
+  enabled: false
+
+serviceAccount:
+  create: false
+
+server:
+  replicas: 1
+  serviceAccountName: default
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: web
+    hosts:
+      - authentik.dejima.men
+      - authentik.n100.lan
+    tls: []
+
+worker:
+  replicas: 1
+  serviceAccountName: default
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
