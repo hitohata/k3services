@@ -48,8 +48,10 @@ root-app/apps.yaml
 ├── apps/jellyfin/
 │   ├── deployment.yaml                 media server, storage, service and ingress
 │   └── backup.yaml                     configuration backup PVC and CronJob
-└── apps/stirling-pdf/
-    └── deployment.yaml                 application, configuration storage, service and ingress
+├── apps/stirling-pdf/
+│   └── deployment.yaml                 application, configuration storage, service and ingress
+└── apps/n8n/
+    └── deployment.yaml                 workflow automation, data storage, service and ingress
 ```
 
 The root application references the upstream Nextcloud Helm chart and the
@@ -298,6 +300,20 @@ files, and logs are deliberately ephemeral. The application does not enable
 Stirling's optional account system, so gateway access must be limited to trusted
 users. The gateway terminates TLS and the application trusts its forwarded
 headers for the public HTTPS route.
+
+## n8n components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| n8n | Workflow automation at `https://n8n.dejima.men`; LAN alias `http://n8n.n100.lan` | K3s `local-path` data PVC on `n100` |
+
+n8n runs as one replica on `n100` because its SQLite database, workflow data,
+credential encryption key, and execution history share a node-local PVC. The
+gateway terminates TLS; n8n is configured with the public HTTPS URL and one
+trusted proxy hop so editor links and webhook callbacks use the correct URL.
+Back up the complete `n8n-data` PVC before a node migration or a destructive
+recreation: its generated encryption key is needed to decrypt saved
+credentials.
 
 ## Secrets
 

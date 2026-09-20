@@ -23,6 +23,10 @@
         icon: stirling-pdf.png
         href: https://stirling-pdf.dejima.men
         description: PDF tools
+    - n8n:
+        icon: n8n.png
+        href: https://n8n.dejima.men
+        description: Workflow automation
 - Media:
     - Jellyfin:
         icon: jellyfin.png
