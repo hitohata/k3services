@@ -18,6 +18,9 @@ nextcloud:
   trustedDomains:
     - nextcloud.dejima.men
     - nextcloud.n100.lan
+  # This custom file replaces the chart's built-in file of the same name.
+  defaultConfigs:
+    reverse-proxy.config.php: false
   configs:
     reverse-proxy.config.php: |-
       <?php
