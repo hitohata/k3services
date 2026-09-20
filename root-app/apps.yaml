@@ -70,6 +70,30 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
+# n8n
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: n8n
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hitohata/k3services
+    targetRevision: HEAD
+    path: apps/n8n
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: n8n
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
 # authentik secrets
 apiVersion: argoproj.io/v1alpha1
 kind: Application
