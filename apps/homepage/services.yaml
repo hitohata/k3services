@@ -28,6 +28,10 @@
         href: https://n8n.dejima.men
         description: Workflow automation
 - Media:
+    - Immich:
+        icon: immich.png
+        href: https://immich.dejima.men
+        description: Photo management
     - Jellyfin:
         icon: jellyfin.png
         href: https://jellyfin.dejima.men
@@ -42,6 +46,10 @@
         href: https://it-tools.dejima.men
         description: Utilities for developers
 - Infrastructure:
+    - HA:
+        icon: home-assistant.png
+        href: https://homeassistant.dejima.men
+        description: Home automation
     - Authentik:
         icon: authentik.png
         href: https://authentik.dejima.men
