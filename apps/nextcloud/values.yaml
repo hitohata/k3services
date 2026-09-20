@@ -30,6 +30,13 @@ nextcloud:
           1 => '192.168.10.1',
         ),
       );
+    public-url.config.php: |-
+      <?php
+      $CONFIG = array (
+        'overwritehost' => 'nextcloud.dejima.men',
+        'overwriteprotocol' => 'https',
+        'overwrite.cli.url' => 'https://nextcloud.dejima.men',
+      );
   existingSecret:
     enabled: true
     secretName: nextcloud-credentials
