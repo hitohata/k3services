@@ -100,6 +100,53 @@ spec:
       targetPort: http
       protocol: TCP
 ---
+# Kubernetes Ingress backends cannot refer to a Service in another namespace.
+# This bridge sends ingress traffic to the KEDA HTTP interceptor in `keda`,
+# while keeping the public Ingress owned by the Stirling PDF application.
+apiVersion: v1
+kind: Service
+metadata:
+  name: stirling-pdf-keda-proxy
+spec:
+  type: ExternalName
+  externalName: keda-add-ons-http-interceptor-proxy.keda.svc.cluster.local
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+---
+apiVersion: http.keda.sh/v1beta1
+kind: InterceptorRoute
+metadata:
+  name: stirling-pdf
+spec:
+  target:
+    service: stirling-pdf
+    port: 8080
+  rules:
+    - hosts:
+        - stirling-pdf.dejima.men
+        - stirling-pdf.n100.lan
+  scalingMetric:
+    concurrency:
+      targetValue: 1
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: stirling-pdf
+spec:
+  scaleTargetRef:
+    name: stirling-pdf
+  minReplicaCount: 0
+  maxReplicaCount: 1
+  cooldownPeriod: 1800
+  triggers:
+    - type: external-push
+      metadata:
+        scalerAddress: keda-add-ons-http-external-scaler.keda:9090
+        interceptorRoute: stirling-pdf
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -116,7 +163,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: stirling-pdf
+                name: stirling-pdf-keda-proxy
                 port:
                   name: http
     - host: stirling-pdf.n100.lan
@@ -126,6 +173,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: stirling-pdf
+                name: stirling-pdf-keda-proxy
                 port:
                   name: http

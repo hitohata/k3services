@@ -1,0 +1,16 @@
+# One interceptor is sufficient for the initial single-service proof of
+# concept. It keeps listening while Stirling PDF is scaled to zero.
+operator:
+  replicas: 1
+  pullPolicy: IfNotPresent
+
+scaler:
+  replicas: 1
+  pullPolicy: IfNotPresent
+
+interceptor:
+  pullPolicy: IfNotPresent
+  replicas:
+    min: 1
+    max: 1
+  readinessTimeout: 7m

@@ -10,3 +10,8 @@ spec:
         forwardedHeaders:
           trustedIPs:
             - 192.168.10.1/32
+    providers:
+      kubernetesIngress:
+        # Stirling PDF's Ingress reaches the KEDA interceptor through a
+        # same-namespace ExternalName Service.
+        allowExternalNameServices: true
