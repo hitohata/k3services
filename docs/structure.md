@@ -53,8 +53,11 @@ root-app/apps.yaml
 │   └── deployment.yaml                 application, configuration storage, service and ingress
 ├── apps/n8n/
     └── deployment.yaml                 workflow automation, data storage, service and ingress
-└── apps/ntfy/
+├── apps/ntfy/
     └── deployment.yaml                 notification server, cache storage, service and ingress
+└── apps/navidrome/
+    ├── deployment.yaml                 music server, storage, service and ingress
+    └── backup.yaml                     SQLite backup PVC and CronJob
 ```
 
 The root application references the upstream Nextcloud Helm chart and the
@@ -343,6 +346,29 @@ for forwarded headers from Traefik. Anonymous topic access is enabled, so the
 gateway must limit access to trusted users before sensitive notification topics
 are used.
 
+## Navidrome components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Navidrome | Music server at `https://navidrome.dejima.men`; LAN alias `http://navidrome.n100.lan` | local database/cache PVC; read-only NFS music PVC |
+| Backup CronJob | Daily SQLite database backup | NFS backup PVC |
+
+Navidrome runs on `n100` because its SQLite database and cache use local-path
+storage. Its music library is mounted read-only from the dedicated
+`nfs-client-navidrome` StorageClass, which provisions these NAS directories:
+
+```text
+/Pi-NAS/navidrome/
+├── navidrome-music/    # add music through the NAS
+└── navidrome-backups/  # daily SQLite database backups
+```
+
+The `navidrome-database-backup` CronJob runs daily at 04:45 UTC and retains 14
+SQLite-consistent database backups. It preserves Navidrome accounts, playlists,
+ratings, and listening state; the music files are not copied because they are
+already on the NAS. The gateway terminates TLS, and Navidrome is configured
+with the public HTTPS URL for browser and client links.
+
 ## Secrets
 
 Sealed Secrets is deployed in `kube-system`. It decrypts a committed
@@ -429,6 +455,15 @@ stop Jellyfin, restore `jellyfin.db` into the configuration PVC's `data`
 directory, extract `config.tar.gz` over the configuration PVC, then start the
 deployment. Media is not duplicated by this job because the source library is
 already on the NAS; protect it with NAS snapshots and an offsite copy.
+
+## Navidrome backups and recovery
+
+The `navidrome-database-backup` CronJob runs daily at 04:45 UTC and retains 14
+SQLite-consistent backups in `/Pi-NAS/navidrome/navidrome-backups`. To recover,
+stop Navidrome, replace `navidrome.db` on the `navidrome-data` PVC with a
+selected backup, remove stale `navidrome.db-wal` and `navidrome.db-shm` files,
+then start the deployment. Music remains on the NAS and is deliberately not
+duplicated by this job.
 
 ## Forgejo backups and recovery
 
