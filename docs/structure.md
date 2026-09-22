@@ -51,8 +51,10 @@ root-app/apps.yaml
 │   └── backup.yaml                     configuration backup PVC and CronJob
 ├── apps/stirling-pdf/
 │   └── deployment.yaml                 application, configuration storage, service and ingress
-└── apps/n8n/
+├── apps/n8n/
     └── deployment.yaml                 workflow automation, data storage, service and ingress
+└── apps/ntfy/
+    └── deployment.yaml                 notification server, cache storage, service and ingress
 ```
 
 The root application references the upstream Nextcloud Helm chart and the
@@ -326,6 +328,20 @@ trusted proxy hop so editor links and webhook callbacks use the correct URL.
 Back up the complete `n8n-data` PVC before a node migration or a destructive
 recreation: its generated encryption key is needed to decrypt saved
 credentials.
+
+## ntfy components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| ntfy | Publish/subscribe notifications at `https://ntfy.dejima.men`; LAN alias `http://ntfy.n100.lan` | K3s `local-path` cache PVC on `n100` |
+
+ntfy runs as one replica on `n100`. Its local SQLite cache retains notifications
+for 12 hours, allowing clients to receive recent messages after reconnecting;
+notifications are otherwise intentionally ephemeral and are not backed up. The
+gateway terminates TLS, and ntfy is configured with the public HTTPS URL and
+for forwarded headers from Traefik. Anonymous topic access is enabled, so the
+gateway must limit access to trusted users before sensitive notification topics
+are used.
 
 ## Secrets
 
