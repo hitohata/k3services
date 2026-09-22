@@ -179,6 +179,26 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
+# traefik-config
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik-config
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hitohata/k3services
+    targetRevision: HEAD
+    path: infrastructure/traefik
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
 # echo-service
 apiVersion: argoproj.io/v1alpha1
 kind: Application
