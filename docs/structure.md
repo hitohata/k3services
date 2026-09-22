@@ -13,6 +13,7 @@ removing a cluster API type can also remove its custom resources.
 ```text
 root-app/apps.yaml
 ├── infrastructure/nfs-provisioner     NFS dynamic provisioning
+├── infrastructure/traefik/            trusted forwarded headers for K3s Traefik
 ├── apps/authentik/                    identity and access management
 ├── apps/homepage/                     service dashboard
 ├── sealed-secrets Helm chart           encrypted-secret controller
@@ -60,6 +61,17 @@ This requires Argo CD 2.6 or later. The release is pinned to chart version
 `9.2.5`. Updating that version is an intentional maintenance change: read the
 chart release notes and upgrade Nextcloud by no more than one major version at a
 time.
+
+## Ingress forwarded headers
+
+K3s manages the Traefik Helm chart. The `traefik-config` application supplies
+a `HelmChartConfig` that trusts forwarded headers on Traefik's HTTP `web` entry
+point only from the TLS-terminating gateway at `192.168.10.1`. The gateway must
+set `X-Forwarded-Proto: https` for HTTPS requests. This preserves the original
+scheme for ingress workloads without enabling insecure forwarded-header trust.
+
+Changing this configuration rolls out Traefik and briefly interrupts ingress
+traffic.
 
 ## Authentik components
 
