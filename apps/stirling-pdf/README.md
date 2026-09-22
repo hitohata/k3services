@@ -14,3 +14,9 @@ The application image is pinned to Stirling PDF 2.14.3. It has a 100 MiB upload
 limit and uses the `en-CA` locale by default. Change those settings in
 `deployment.yaml` when needed; review the upstream release notes before updating
 the image version.
+
+KEDA scales Stirling PDF to zero after 30 minutes without HTTP requests and
+starts it again when a request arrives. The first request after an idle period
+waits for the pod to start, which can take up to the configured seven-minute
+interceptor readiness timeout. The deployment is intentionally limited to one
+replica because its configuration PVC is `ReadWriteOnce`.

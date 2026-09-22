@@ -14,6 +14,7 @@ removing a cluster API type can also remove its custom resources.
 root-app/apps.yaml
 ├── infrastructure/nfs-provisioner     NFS dynamic provisioning
 ├── infrastructure/traefik/            trusted forwarded headers for K3s Traefik
+├── apps/keda/                          event-driven autoscaling and HTTP interception
 ├── apps/authentik/                    identity and access management
 ├── apps/homepage/                     service dashboard
 ├── sealed-secrets Helm chart           encrypted-secret controller
@@ -77,6 +78,25 @@ scheme for ingress workloads without enabling insecure forwarded-header trust.
 
 Changing this configuration rolls out Traefik and briefly interrupts ingress
 traffic.
+
+Traefik also permits `ExternalName` Ingress backends. This allows an Ingress
+in an application namespace to reach the KEDA HTTP interceptor in the `keda`
+namespace. Only Stirling PDF uses this mechanism currently.
+
+## KEDA components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| KEDA | Creates autoscaling resources and supplies external metrics to Kubernetes HPA | None |
+| KEDA HTTP Add-on | Intercepts HTTP traffic, reports demand, and holds cold-start requests | None |
+
+KEDA core and its HTTP Add-on run in the `keda` namespace. The HTTP interceptor
+keeps one replica running for the initial proof-of-concept. Stirling PDF's
+Ingress targets an `ExternalName` bridge to that interceptor; the interceptor
+then forwards matching requests to Stirling's ordinary Service. KEDA scales
+the Stirling PDF Deployment to zero after 30 minutes with no HTTP demand and
+scales it to at most one replica. A first request after scale-down may wait for
+the application to start; the interceptor's readiness timeout is seven minutes.
 
 ## Authentik components
 

@@ -1,0 +1,16 @@
+# KEDA's defaults reserve 100m CPU and 100Mi memory for each of its three
+# control-plane components. Keep those explicit so the cluster-wide baseline
+# is reviewable.
+resources:
+  operator:
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  metricServer:
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  webhooks:
+    requests:
+      cpu: 100m
+      memory: 100Mi
