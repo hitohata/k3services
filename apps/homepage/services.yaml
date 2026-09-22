@@ -27,6 +27,10 @@
         icon: n8n.png
         href: https://n8n.dejima.men
         description: Workflow automation
+    - ntfy:
+        icon: ntfy.png
+        href: https://ntfy.dejima.men
+        description: Push notifications
 - Media:
     - Immich:
         icon: immich.png
