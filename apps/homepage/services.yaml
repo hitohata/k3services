@@ -31,10 +31,6 @@
         icon: ntfy.png
         href: https://ntfy.dejima.men
         description: Push notifications
-    - Navidrome:
-        icon: navidrome.png
-        href: https://navidrome.dejima.men
-        description: Music server
 - Media:
     - Immich:
         icon: immich.png
@@ -44,6 +40,10 @@
         icon: jellyfin.png
         href: https://jellyfin.dejima.men
         description: Media server
+    - Navidrome:
+        icon: navidrome.png
+        href: https://navidrome.dejima.men
+        description: Music server
 - Development:
     - Forgejo:
         icon: forgejo.png
@@ -66,3 +66,16 @@
         icon: netdata.png
         href: https://netdata.dejima.men
         description: System monitoring
+        widget:
+          type: netdata
+          url: https://netdata.dejima.men
+          fields: ["warnings", "criticals"]
+- Administration:
+    - AdGuard Home:
+        icon: adguard-home.png
+        href: https://dns.dejima.men
+        description: DNS filtering and administration
+    - k3services:
+        icon: github.png
+        href: https://github.com/hitohata/k3services
+        description: Cluster GitOps repository
