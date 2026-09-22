@@ -31,6 +31,10 @@
         icon: ntfy.png
         href: https://ntfy.dejima.men
         description: Push notifications
+    - Navidrome:
+        icon: navidrome.png
+        href: https://navidrome.dejima.men
+        description: Music server
 - Media:
     - Immich:
         icon: immich.png
