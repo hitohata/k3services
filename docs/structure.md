@@ -97,6 +97,8 @@ then forwards matching requests to Stirling's ordinary Service. KEDA scales
 the Stirling PDF Deployment to zero after 30 minutes with no HTTP demand and
 scales it to at most one replica. A first request after scale-down may wait for
 the application to start; the interceptor's readiness timeout is seven minutes.
+The KEDA Application uses server-side apply so its large ScaledJob CRD can be
+created without exceeding Kubernetes' client-side apply annotation limit.
 
 ## Authentik components
 
