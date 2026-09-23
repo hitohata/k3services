@@ -295,8 +295,12 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    # The ScaledJob CRD exceeds Kubernetes' client-side apply annotation limit.
+    # Server-side apply records field ownership without storing the full
+    # manifest in kubectl.kubernetes.io/last-applied-configuration.
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
 ---
 # keda-http-add-on
 apiVersion: argoproj.io/v1alpha1
