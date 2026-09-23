@@ -301,6 +301,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      # Avoid the client-side migration step, which would recreate the same
+      # oversized last-applied annotation before server-side apply can run.
+      - ClientSideApplyMigration=false
 ---
 # keda-http-add-on
 apiVersion: argoproj.io/v1alpha1
