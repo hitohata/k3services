@@ -5,11 +5,11 @@ the `keda` namespace from the pinned `kedacore/keda` Helm chart. The pinned
 KEDA HTTP Add-on is installed alongside it and supplies the interceptor,
 scaler, and operator needed to scale HTTP workloads from zero.
 
-The KEDA Argo CD Application uses server-side apply because the chart's
-`ScaledJob` CRD is too large for Kubernetes' client-side apply annotation.
-Keep that sync option when updating the chart; without it, Argo CD cannot
-create the CRD and the KEDA operator exits while starting its ScaledJob
-controller.
+The KEDA Argo CD Application uses server-side apply and disables Argo CD's
+client-side apply migration because the chart's `ScaledJob` CRD is too large
+for Kubernetes' client-side apply annotation. Keep both sync options when
+updating the chart; without them, Argo CD cannot create the CRD and the KEDA
+operator exits while starting its ScaledJob controller.
 
 The HTTP interceptor has one always-running replica for this initial
 proof-of-concept. It accepts requests while a workload is stopped, asks KEDA
