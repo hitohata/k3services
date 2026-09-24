@@ -218,3 +218,17 @@ allowVolumeExpansion: true
 volumeBindingMode: Immediate
 mountOptions:
   - nfsvers=4
+---
+# Stirling PDF saved files use a dedicated NAS directory.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-client-stirling-pdf
+provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
+parameters:
+  pathPattern: "stirling-pdf/${.PVC.name}"
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+mountOptions:
+  - nfsvers=4

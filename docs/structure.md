@@ -332,14 +332,23 @@ gateway; Paperless is configured to trust the forwarded HTTPS scheme.
 
 | Component | Purpose | Storage |
 | --- | --- | --- |
-| Stirling PDF | PDF editing and conversion at `https://stirling-pdf.dejima.men`; direct LAN alias `http://stirling-pdf.n100.lan` | K3s `local-path` configuration PVC |
+| Stirling PDF | PDF editing and conversion at `https://stirling-pdf.dejima.men`; direct LAN alias `http://stirling-pdf.n100.lan` | K3s `local-path` configuration PVC; NAS saved-file PVC |
 
-Stirling PDF is pinned to `n100`. Its configuration, including settings saved
-from the web UI, persists on `local-path`; uploaded documents, temporary work
-files, and logs are deliberately ephemeral. The application does not enable
-Stirling's optional account system, so gateway access must be limited to trusted
-users. The gateway terminates TLS and the application trusts its forwarded
-headers for the public HTTPS route.
+Stirling PDF is pinned to `n100`. Its configuration, user database, and
+settings saved from the web UI persist on `local-path`. Saved documents use a
+separate 20 Gi `nfs-client-stirling-pdf` PVC, allowing authenticated users to
+access them across browser sessions and share individual files with other
+Stirling users. It provisions a retained NAS directory at:
+
+```text
+/Pi-NAS/stirling-pdf/
+└── stirling-pdf-storage/  # saved documents
+```
+
+The cluster does not make an additional backup of this PVC. Ordinary editor
+uploads, temporary work files, and logs remain ephemeral. The gateway
+terminates TLS and the application trusts its forwarded headers for the public
+HTTPS route.
 
 ## n8n components
 
