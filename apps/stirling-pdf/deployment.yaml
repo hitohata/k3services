@@ -10,6 +10,18 @@ spec:
     requests:
       storage: 2Gi
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stirling-pdf-storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-client-stirling-pdf
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -46,6 +58,17 @@ spec:
               value: "100"
             - name: SERVER_FORWARD_HEADERS_STRATEGY
               value: native
+            # Saved documents and sharing require authenticated users.
+            - name: SECURITY_ENABLELOGIN
+              value: "true"
+            - name: STORAGE_ENABLED
+              value: "true"
+            - name: STORAGE_PROVIDER
+              value: local
+            - name: STORAGE_LOCAL_BASEPATH
+              value: /storage
+            - name: STORAGE_SHARING_ENABLED
+              value: "true"
           startupProbe:
             httpGet:
               path: /api/v1/info/status
@@ -78,6 +101,8 @@ spec:
               mountPath: /logs
             - name: temporary-files
               mountPath: /tmp/stirling-pdf
+            - name: storage
+              mountPath: /storage
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -86,6 +111,9 @@ spec:
           emptyDir: {}
         - name: temporary-files
           emptyDir: {}
+        - name: storage
+          persistentVolumeClaim:
+            claimName: stirling-pdf-storage
 ---
 apiVersion: v1
 kind: Service
