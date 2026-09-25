@@ -723,6 +723,14 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
+  # KEDA owns this Deployment's replica count. Ignoring only that field keeps
+  # Argo CD self-heal from reversing KEDA scale-to-zero decisions.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: immich-machine-learning
+      jsonPointers:
+        - /spec/replicas
   sources:
     - repoURL: oci://ghcr.io/immich-app/immich-charts/immich
       targetRevision: 0.13.1
@@ -793,6 +801,14 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   project: default
+  # KEDA owns this Deployment's replica count. Ignoring only that field keeps
+  # Argo CD self-heal from reversing KEDA scale-to-zero decisions.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: stirling-pdf
+      jsonPointers:
+        - /spec/replicas
   source:
     repoURL: https://github.com/hitohata/k3services
     targetRevision: HEAD
