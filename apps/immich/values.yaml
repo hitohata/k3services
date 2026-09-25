@@ -86,4 +86,5 @@ machine-learning:
               memory: 4Gi
   persistence:
     cache:
+      type: persistentVolumeClaim
       existingClaim: immich-model-cache
