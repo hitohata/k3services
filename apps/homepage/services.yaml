@@ -71,6 +71,10 @@
           url: https://netdata.dejima.men
           fields: ["warnings", "criticals"]
 - Administration:
+    - WUD:
+        icon: whats-up-docker.png
+        href: https://wud.dejima.men
+        description: Container update monitoring
     - AdGuard Home:
         icon: adguard-home.png
         href: https://dns.dejima.men
