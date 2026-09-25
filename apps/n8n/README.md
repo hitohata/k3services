@@ -4,6 +4,9 @@ n8n is deployed as a single persistent workflow-automation instance. It is
 available through the TLS-terminating gateway at
 `https://n8n.dejima.men` and directly on the LAN at `http://n8n.n100.lan`.
 
+The application image is pinned to n8n 2.41.3. Task runners are explicitly
+enabled, as required by n8n 2.x.
+
 The n8n data directory is stored on a `local-path` PVC pinned to `n100`. It
 contains workflows, credentials, the SQLite database, and n8n's generated
 encryption key. Keep this PVC together with a backup before moving or

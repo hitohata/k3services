@@ -40,7 +40,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: n8n
-          image: docker.io/n8nio/n8n:1.123.80
+          image: docker.io/n8nio/n8n:2.41.3
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -49,6 +49,8 @@ spec:
           env:
             - name: NODE_ENV
               value: production
+            - name: N8N_RUNNERS_ENABLED
+              value: "true"
             - name: TZ
               value: America/Vancouver
             - name: GENERIC_TIMEZONE
