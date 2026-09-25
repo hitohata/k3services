@@ -142,6 +142,11 @@ cronjob:
   type: cronjob
   cronjob:
     schedule: "*/5 * * * *"
+    # `cron.php` must run as the owner of config/config.php, not as root.
+    securityContext:
+      runAsUser: 33
+      runAsGroup: 33
+      runAsNonRoot: true
 
 resources:
   requests:
