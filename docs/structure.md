@@ -59,6 +59,9 @@ root-app/apps.yaml
     └── deployment.yaml                 workflow automation, data storage, service and ingress
 ├── apps/ntfy/
     └── deployment.yaml                 notification server, cache storage, service and ingress
+├── apps/wud/
+│   ├── deployment.yaml                 container update monitor, RBAC, storage, service and ingress
+│   └── secrets/                        encrypted WUD administrator credentials
 └── apps/navidrome/
     ├── deployment.yaml                 music server, storage, service and ingress
     └── backup.yaml                     SQLite backup PVC and CronJob
@@ -414,6 +417,19 @@ gateway terminates TLS, and ntfy is configured with the public HTTPS URL and
 for forwarded headers from Traefik. Anonymous topic access is enabled, so the
 gateway must limit access to trusted users before sensitive notification topics
 are used.
+
+## WUD components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| WUD | Cluster-wide container image update monitoring at `https://wud.dejima.men`; LAN alias `http://wud.n100.lan` | K3s `local-path` SQLite PVC on `n100` |
+
+WUD runs on `n100` and uses a read-only ClusterRole to discover Deployments,
+StatefulSets, DaemonSets, CronJobs, Pods, and Nodes across the cluster. It
+checks the pinned container images hourly and only reports available updates;
+it cannot modify workloads. Its SQLite state is operational data and is not
+backed up. The web UI requires the separately managed encrypted administrator
+Secret, while the gateway terminates TLS for the public HTTPS route.
 
 ## Navidrome components
 

@@ -118,6 +118,54 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
+# WUD encrypted credentials
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wud-secrets
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hitohata/k3services
+    targetRevision: HEAD
+    path: apps/wud/secrets
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wud
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+# WUD
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wud
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hitohata/k3services
+    targetRevision: HEAD
+    path: apps/wud
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wud
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
 # navidrome
 apiVersion: argoproj.io/v1alpha1
 kind: Application
