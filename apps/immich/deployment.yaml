@@ -116,6 +116,10 @@ spec:
                   key: db-password
             - name: POSTGRES_INITDB_ARGS
               value: --data-checksums
+            # PostgreSQL 18 otherwise defaults to a versioned directory outside
+            # this PVC mount. Keep its cluster data on the local-path claim.
+            - name: PGDATA
+              value: /var/lib/postgresql/data
           ports:
             - name: postgresql
               containerPort: 5432
@@ -141,11 +145,8 @@ spec:
               memory: 512Mi
             limits:
               memory: 2Gi
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
+          # The upstream entrypoint starts as root to prepare PGDATA and its
+          # runtime socket directory, then drops to the postgres user itself.
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data
@@ -195,8 +196,6 @@ spec:
         app.kubernetes.io/name: immich-valkey
     spec:
       automountServiceAccountToken: false
-      nodeSelector:
-        kubernetes.io/hostname: n100
       securityContext:
         seccompProfile:
           type: RuntimeDefault
@@ -230,6 +229,11 @@ spec:
             capabilities:
               drop:
                 - ALL
+            # Starting as the image's Valkey user avoids its entrypoint needing
+            # CAP_SETUID, which is intentionally dropped above.
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
 ---
 apiVersion: v1
 kind: Service
