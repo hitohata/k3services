@@ -755,6 +755,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
 ---
 # linkwarden
 apiVersion: argoproj.io/v1alpha1
@@ -822,3 +823,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
