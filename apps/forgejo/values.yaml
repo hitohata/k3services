@@ -3,7 +3,7 @@ fullnameOverride: forgejo
 image:
   registry: code.forgejo.org
   repository: forgejo/forgejo
-  tag: 15.0.8
+  tag: 15.0.9
   # The chart appends -rootless to this tag.
   rootless: true
   pullPolicy: IfNotPresent

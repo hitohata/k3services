@@ -18,7 +18,7 @@ Saved files and direct user-to-user sharing are enabled. Sign in, save a
 document from **My Files**, then share it with the other user's account. This
 is distinct from an ordinary editor upload, which stays in the browser session.
 
-The application image is pinned to Stirling PDF 2.14.3. It has a 100 MiB upload
+The application image is pinned to Stirling PDF 3.0.0. It has a 100 MiB upload
 limit and uses the `en-CA` locale by default. Change those settings in
 `deployment.yaml` when needed; review the upstream release notes before updating
 the image version.

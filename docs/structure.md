@@ -70,7 +70,7 @@ root-app/apps.yaml
 The root application references the upstream Nextcloud Helm chart and the
 app-specific `apps/nextcloud/values.yaml` through Argo CD multi-source support.
 This requires Argo CD 2.6 or later. The release is pinned to chart version
-`9.2.5`. Updating that version is an intentional maintenance change: read the
+`9.3.0`. Updating that version is an intentional maintenance change: read the
 chart release notes and upgrade Nextcloud by no more than one major version at a
 time.
 

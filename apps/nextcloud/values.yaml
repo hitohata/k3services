@@ -215,7 +215,7 @@ extraManifests:
                 kubernetes.io/hostname: n100
               containers:
                 - name: mariadb-dump
-                  image: mariadb:11.8
+                  image: mariadb:11.8.6
                   command:
                     - /bin/sh
                     - -ec
