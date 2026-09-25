@@ -70,9 +70,10 @@ root-app/apps.yaml
 The root application references the upstream Nextcloud Helm chart and the
 app-specific `apps/nextcloud/values.yaml` through Argo CD multi-source support.
 This requires Argo CD 2.6 or later. The release is pinned to chart version
-`9.3.0`. Updating that version is an intentional maintenance change: read the
-chart release notes and upgrade Nextcloud by no more than one major version at a
-time.
+`9.3.0`, with the Nextcloud image explicitly pinned to `35.0.1` until the chart
+repository publishes a matching release. Updating either is intentional
+maintenance work: read the chart release notes and upgrade Nextcloud by no more
+than one major version at a time.
 
 ## Ingress forwarded headers
 
@@ -137,7 +138,7 @@ StorageClass:
 | CronJob | Runs `cron.php` every five minutes | Uses Nextcloud PVCs |
 | Backup CronJob | Daily compressed MariaDB dump | NFS backup PVC |
 
-MariaDB intentionally uses `local-path`; its live database files never use the
+MariaDB 12.0.2 intentionally uses `local-path`; its live database files never use the
 NAS. The Nextcloud stack is pinned to `n100`, keeping MariaDB and all other
 storage-related workloads off `p51`'s SD card. A local-path database is tied to
 its node, so it is not high availability. Its backup is what makes node

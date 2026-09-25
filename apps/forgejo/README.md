@@ -1,7 +1,7 @@
 # Forgejo
 
 Forgejo is deployed with the official Helm chart, external PostgreSQL, and a
-rootless Forgejo image pinned to the 15.0 LTS line. The service is available at
+rootless Forgejo image pinned to version 16.0.5. The service is available at
 `https://forgejo.dejima.men` through the TLS-terminating gateway.
 
 The committed SealedSecret creates the initial `forgejo-admin` account. After

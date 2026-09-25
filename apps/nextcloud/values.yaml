@@ -1,5 +1,10 @@
 replicaCount: 1
 
+# Chart 9.3.0 has not yet released with the Nextcloud 35 image. Pin the
+# application image explicitly so both the main Deployment and CronJob use it.
+image:
+  tag: 35.0.1
+
 # Keep this stack off p51, whose local storage is an SD card. MariaDB's
 # local-path PVC is therefore always provisioned on n100.
 nodeSelector:
@@ -79,6 +84,8 @@ externalDatabase:
 
 mariadb:
   enabled: true
+  image:
+    tag: 12.0.2
   fullnameOverride: nextcloud-mariadb
   architecture: standalone
   auth:
@@ -215,7 +222,7 @@ extraManifests:
                 kubernetes.io/hostname: n100
               containers:
                 - name: mariadb-dump
-                  image: mariadb:11.8.6
+                  image: mariadb:12.0.2
                   command:
                     - /bin/sh
                     - -ec
