@@ -1,0 +1,89 @@
+# Official Immich chart configuration. PostgreSQL and Valkey are intentionally
+# external to the chart: the PostgreSQL 18 destination matches the NixOS source
+# database, and Valkey remains the small ephemeral deployment in deployment.yaml.
+defaultPodOptions:
+  nodeSelector:
+    kubernetes.io/hostname: n100
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          tag: v3.0.0
+        env:
+          DB_HOSTNAME: immich-postgresql
+          DB_USERNAME: postgres
+          DB_DATABASE_NAME: immich
+          DB_PASSWORD:
+            valueFrom:
+              secretKeyRef:
+                name: immich-credentials
+                key: db-password
+          REDIS_HOSTNAME: immich-valkey
+          IMMICH_MACHINE_LEARNING_URL: http://immich-machine-learning-keda-proxy:8080
+          UPLOAD_LOCATION: /data
+          TZ: America/Vancouver
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+
+immich:
+  persistence:
+    library:
+      existingClaim: immich-library
+
+valkey:
+  enabled: false
+
+server:
+  controllers:
+    main:
+      replicas: 0
+      containers:
+        main:
+          resources:
+            requests:
+              cpu: 250m
+              memory: 1Gi
+            limits:
+              memory: 4Gi
+  ingress:
+    main:
+      enabled: true
+      annotations:
+        traefik.ingress.kubernetes.io/router.entrypoints: web
+      hosts:
+        - host: immich.dejima.men
+          paths:
+            - path: /
+              service:
+                identifier: main
+        - host: immich.n100.lan
+          paths:
+            - path: /
+              service:
+                identifier: main
+
+machine-learning:
+  controllers:
+    main:
+      replicas: 0
+      containers:
+        main:
+          resources:
+            requests:
+              cpu: 250m
+              memory: 1Gi
+            limits:
+              memory: 4Gi
+  persistence:
+    cache:
+      existingClaim: immich-model-cache

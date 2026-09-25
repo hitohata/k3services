@@ -664,6 +664,43 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
+# immich
+# The server is intentionally scaled to zero until the migration procedure in
+# apps/immich/README.md has restored the live NixOS database.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: immich
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: oci://ghcr.io/immich-app/immich-charts/immich
+      targetRevision: 0.12.0
+      path: .
+      helm:
+        releaseName: immich
+        valueFiles:
+          - $values/apps/immich/values.yaml
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      ref: values
+      path: apps/immich
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      path: apps/immich/secrets
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: immich
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
 # linkwarden
 apiVersion: argoproj.io/v1alpha1
 kind: Application

@@ -50,6 +50,9 @@ root-app/apps.yaml
 ├── apps/jellyfin/
 │   ├── deployment.yaml                 media server, storage, service and ingress
 │   └── backup.yaml                     configuration backup PVC and CronJob
+├── apps/immich/
+│   ├── values.yaml                     official Immich Helm configuration
+│   └── deployment.yaml                 PostgreSQL, cache, migration, and KEDA resources
 ├── apps/stirling-pdf/
 │   └── deployment.yaml                 application, configuration storage, service and ingress
 ├── apps/n8n/
@@ -179,6 +182,40 @@ Mealie has no upstream Helm chart. The deployment is rendered from the pinned
 `rtomik/mealie` Helm chart, with the official `ghcr.io/mealie-recipes/mealie`
 image pinned in `apps/mealie/values.yaml`. PostgreSQL is a separate pinned
 Bitnami Helm source within the same Argo CD Application.
+
+## Immich components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Immich server | Photo and video management at `https://immich.dejima.men`; direct LAN alias `http://immich.n100.lan` | Existing NFS media directory |
+| Machine learning | Facial recognition and smart search; KEDA scales it from zero on demand | K3s `local-path` model-cache PVC on `n100` |
+| PostgreSQL | Immich metadata and asset paths | K3s `local-path` PVC on `n100` |
+| Valkey | Ephemeral queue and cache | None |
+
+Immich is migrated from the live NixOS service in a maintenance window. Its
+server and machine-learning deployments are initially scaled to zero, so Argo
+CD can create the destination database without exposing an empty library. The
+final NixOS PostgreSQL 18 logical dump is restored before either deployment is
+started. PostgreSQL remains on `n100` because it uses `local-path`; its live
+data must never use NFS.
+
+The application mounts the existing NAS directories directly through retained
+static PVs instead of dynamically provisioning replacements:
+
+```text
+/Pi-NAS/immich/
+├── storage/     # existing uploaded assets and derived media
+└── db_backup/   # NixOS PostgreSQL dumps, including the final migration dump
+```
+
+This preserves the paths recorded in the Immich database. The
+`nfs-client-immich` StorageClass is reserved for future Immich-specific NFS
+claims; it must not replace the static migration claims.
+
+KEDA's HTTP interceptor starts the machine-learning worker when the Immich
+server sends it work and returns it to zero replicas after ten idle minutes.
+The model cache remains local to `n100`, but the first ML request after an idle
+period waits for the worker and models to load.
 
 ## Vaultwarden components
 
