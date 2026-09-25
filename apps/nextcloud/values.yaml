@@ -88,6 +88,12 @@ mariadb:
   primary:
     nodeSelector:
       kubernetes.io/hostname: n100
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        memory: 768Mi
     persistence:
       enabled: true
       storageClass: local-path
@@ -104,6 +110,12 @@ redis:
   master:
     nodeSelector:
       kubernetes.io/hostname: n100
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 192Mi
     persistence:
       enabled: false
   replica:
@@ -126,7 +138,7 @@ cronjob:
 
 resources:
   requests:
-    cpu: 250m
+    cpu: 100m
     memory: 512Mi
   limits:
     memory: 2Gi
