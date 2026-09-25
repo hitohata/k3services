@@ -665,8 +665,7 @@ spec:
       - CreateNamespace=true
 ---
 # immich
-# The server is intentionally scaled to zero until the migration procedure in
-# apps/immich/README.md has restored the live NixOS database.
+# The server is enabled after the completed NixOS migration.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -678,7 +677,7 @@ spec:
   project: default
   sources:
     - repoURL: oci://ghcr.io/immich-app/immich-charts/immich
-      targetRevision: 0.12.0
+      targetRevision: 0.13.1
       path: .
       helm:
         releaseName: immich

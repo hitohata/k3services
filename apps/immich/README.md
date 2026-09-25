@@ -12,7 +12,7 @@ The application mounts the existing NAS directories directly:
 └── db_backup/  # NixOS PostgreSQL dumps
 ```
 
-The official Immich Helm chart (pinned to `0.12.0`) deploys the server and
+The official Immich Helm chart (pinned to `0.13.1`) deploys the server and
 machine-learning workloads. PostgreSQL, the cache, and both Immich workloads
 are pinned to `n100`.
 PostgreSQL uses `local-path`; its live data must not be placed on NFS. The
