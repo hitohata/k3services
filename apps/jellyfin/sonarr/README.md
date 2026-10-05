@@ -1,5 +1,8 @@
 # Sonarr
 
+CPU reservation is 50m with a two-core limit. This keeps the media suite
+schedulable on `n100` while allowing bursts during imports and scans.
+
 Sonarr manages TV and anime at `http://sonarr.n100.lan`. The shared
 [media package](../README.md) deploys it into the `jellyfin`
 namespace to share the existing `jellyfin-media`
