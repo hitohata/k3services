@@ -48,8 +48,14 @@ root-app/apps.yaml
 │   ├── resources/                      backup PVC and CronJob
 │   └── secrets/                        encrypted administrator and database credentials
 ├── apps/jellyfin/
-│   ├── deployment.yaml                 media server, storage, service and ingress
-│   └── backup.yaml                     configuration backup PVC and CronJob
+│   ├── kustomization.yaml              package for all five media services
+│   ├── server/
+│   │   ├── deployment.yaml             Jellyfin, storage, service and ingress
+│   │   └── backup.yaml                 configuration backup PVC and CronJob
+│   ├── sonarr/                         TV/anime automation
+│   ├── radarr/                         movie automation
+│   ├── bazarr/                         subtitle automation
+│   └── jellyseerr/                     Seerr request portal
 ├── apps/immich/
 │   ├── values.yaml                     official Immich Helm configuration
 │   └── deployment.yaml                 PostgreSQL, cache, migration, and KEDA resources
@@ -322,13 +328,55 @@ so the service cannot modify the library:
 
 ```text
 /Pi-NAS/jellyfin/
-├── jellyfin-media/    # media library; add files through the NAS
-└── jellyfin-backups/  # daily configuration/database backups
+├── jellyfin-media/    # one shared PVC and filesystem for the whole media suite
+│   ├── staging/       # download/rip intake
+│   ├── movies/        # Radarr-managed library
+│   └── tv/            # Sonarr-managed library
+└── jellyfin-backups/  # daily Jellyfin configuration/database backups
 ```
 
 The deployment intentionally does not mount GPU devices or enable hardware
 transcoding. Direct play works normally; enable hardware acceleration later
 only with a suitable Kubernetes device plugin and reviewed device permissions.
+
+## Media automation components
+
+Jellyfin, Sonarr, Radarr, Bazarr, and Jellyseerr (using the maintained Seerr
+image) form one Kustomize package at `apps/jellyfin`. The existing
+`jellyfin` Argo CD Application at sync wave 1 deploys this package into the
+`jellyfin` namespace. Its `server/`, `sonarr/`, `radarr/`, `bazarr/`, and
+`jellyseerr/` directories are Kustomize bases;
+there are no separate companion Applications. One sync reconciles the suite,
+while each service retains its own Deployment and configuration PVC.
+
+The existing Application continues to own the `jellyfin-media` claim and
+Jellyfin backup job, preserving resource names, storage, and ownership.
+
+Each companion has a single-replica Recreate Deployment on `n100`, a 5 Gi
+`local-path` configuration PVC, a ClusterIP Service, probes, and resource
+requests/limits. Sonarr, Radarr, and Bazarr mount the complete media claim
+read-write at `/media`; Jellyfin and Seerr mount it read-only. The three media
+writers use init containers running as UID/GID 1000 to create missing library
+directories and check write access. Existing NAS permissions must permit this;
+the init containers do not change ownership or move existing files.
+
+One PVC/mount keeps staging and destination libraries on the same NFS
+filesystem for hardlinks and atomic moves. Do not split them into separate
+claims, subPath mounts, datasets, or exports. Live SQLite databases remain on
+`n100`; no database storage is migrated to NFS.
+
+The Services replace Compose's Docker network and host port mappings. Within
+the namespace use `sonarr:8989`, `radarr:7878`, `bazarr:6767`,
+`jellyseerr:5055`, and `jellyfin:8096`. Arr administration Ingresses have only
+`*.n100.lan` hosts. These hostnames are not an access-control boundary: keep
+them off the public gateway and enable application authentication. The request
+portal also has `jellyseerr.dejima.men`, with TLS terminated at the gateway.
+DNS and gateway routes must be provisioned separately.
+
+The existing Jellyfin backup covers only Jellyfin. Companion configuration
+requires separate application backups/off-node copies as described in
+[the media stack guide](media-stack.md), which also covers naming, API
+connections, subtitle profiles, and downloader requirements.
 
 ## Forgejo components
 

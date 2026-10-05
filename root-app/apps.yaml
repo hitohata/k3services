@@ -590,7 +590,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
-# jellyfin
+# Jellyfin media suite (one Kustomize package)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
