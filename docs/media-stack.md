@@ -156,7 +156,10 @@ both the package and standalone Applications.
 Startup probes allow up to ten minutes, readiness probes gate Service traffic,
 and liveness probes restart stalled containers. Bazarr uses TCP probes because
 web authentication can protect or redirect its UI. Resource requests reserve
-1.5 Gi total memory for the four companions in addition to Jellyfin; ensure
+200m CPU (50m each) and 1.5 Gi total memory for the four companions in addition
+to Jellyfin. Each companion retains a two-core CPU limit for bursts. The CPU
+requests were reduced from 100m each after Sonarr and Seerr could not schedule
+on `n100` with only 95m CPU unreserved, despite low actual CPU usage. Ensure
 `n100` has spare capacity. LinuxServer containers initialize as root and drop
 the application to UID/GID 1000. Seerr runs entirely as UID/GID 1000.
 

@@ -1,5 +1,8 @@
 # Bazarr
 
+CPU reservation is 50m with a two-core limit. This keeps the media suite
+schedulable on `n100` while allowing bursts during imports and scans.
+
 Deployed through the shared [media package](../README.md) and the
 existing `jellyfin` Argo CD Application.
 

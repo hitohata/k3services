@@ -354,7 +354,9 @@ Jellyfin backup job, preserving resource names, storage, and ownership.
 
 Each companion has a single-replica Recreate Deployment on `n100`, a 5 Gi
 `local-path` configuration PVC, a ClusterIP Service, probes, and resource
-requests/limits. Sonarr, Radarr, and Bazarr mount the complete media claim
+requests/limits. Each companion reserves 50m CPU with a two-core limit; the
+four together reserve 200m so they fit alongside the existing workloads on
+`n100`. Sonarr, Radarr, and Bazarr mount the complete media claim
 read-write at `/media`; Jellyfin and Seerr mount it read-only. The three media
 writers use init containers running as UID/GID 1000 to create missing library
 directories and check write access. Existing NAS permissions must permit this;

@@ -1,5 +1,8 @@
 # Radarr
 
+CPU reservation is 50m with a two-core limit. This keeps the media suite
+schedulable on `n100` while allowing bursts during imports and scans.
+
 Radarr manages movies at `http://radarr.n100.lan`. The shared
 [media package](../README.md) deploys it into the `jellyfin`
 namespace and mounts the existing `jellyfin-media`
