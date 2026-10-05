@@ -44,6 +44,22 @@
         icon: navidrome.png
         href: https://navidrome.dejima.men
         description: Music server
+    - Sonarr:
+        icon: sonarr.png
+        href: http://sonarr.n100.lan
+        description: TV and anime organization
+    - Radarr:
+        icon: radarr.png
+        href: http://radarr.n100.lan
+        description: Movie organization
+    - Bazarr:
+        icon: bazarr.png
+        href: http://bazarr.n100.lan
+        description: Automatic subtitles
+    - Jellyseerr:
+        icon: jellyseerr.png
+        href: https://jellyseerr.dejima.men
+        description: Media requests (Seerr)
 - Development:
     - Forgejo:
         icon: forgejo.png

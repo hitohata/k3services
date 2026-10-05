@@ -29,6 +29,9 @@ Persistent volumes use `Retain`, so deleting a PVC does not delete its NAS data.
 
 ## System structure
 
+For the Kubernetes Jellyfin/Arr media suite, see
+[the media stack guide](docs/media-stack.md).
+
 See [the structure guide](docs/structure.md) for the Argo CD layout, NFS
 storage, Nextcloud, Mealie, Vaultwarden, IT-Tools, Netdata, Paperless-ngx, and
 Forgejo, Jellyfin, and Linkwarden services, encrypted credentials, and backups.
