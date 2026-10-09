@@ -12,9 +12,10 @@ The application mounts the existing NAS directories directly:
 └── db_backup/  # NixOS PostgreSQL dumps
 ```
 
-The official Immich Helm chart (pinned to `0.13.1`) deploys the server and
-machine-learning workloads. PostgreSQL, the cache, and both Immich workloads
-are pinned to `n100`.
+The official Immich Helm chart (pinned to `0.13.4`) deploys the server and
+machine-learning workloads. The server and machine-learning images are pinned
+to Immich `v3.2.0`. PostgreSQL, the cache, and both Immich workloads are pinned
+to `n100`.
 PostgreSQL uses `local-path`; its live data must not be placed on NFS. The
 Immich media directory remains NFS-backed so it stays exactly where the NixOS
 service wrote it. The model cache is also local to `n100`.
