@@ -63,18 +63,6 @@ spec:
     requests:
       storage: 100Gi
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: immich-model-cache
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: local-path
-  resources:
-    requests:
-      storage: 20Gi
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -247,9 +235,8 @@ spec:
       port: 6379
       targetPort: valkey
 ---
-# The HTTP add-on keeps an interceptor available while machine learning is at
-# zero replicas. Immich sends ML requests to this Service rather than directly
-# to the target Service, allowing KEDA to wake the worker on demand.
+# Immich sends machine-learning requests through the HTTP interceptor. KEDA
+# keeps one worker running so requests do not wait for a scale-up from zero.
 apiVersion: v1
 kind: Service
 metadata:

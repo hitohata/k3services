@@ -58,7 +58,7 @@ root-app/apps.yaml
 │   └── jellyseerr/                     Seerr request portal
 ├── apps/immich/
 │   ├── values.yaml                     official Immich Helm configuration
-│   └── deployment.yaml                 PostgreSQL, cache, migration, and KEDA resources
+│   └── deployment.yaml                 PostgreSQL, migration, and KEDA resources
 ├── apps/stirling-pdf/
 │   └── deployment.yaml                 application, configuration storage, service and ingress
 ├── apps/n8n/
@@ -200,16 +200,14 @@ Bitnami Helm source within the same Argo CD Application.
 | Component | Purpose | Storage |
 | --- | --- | --- |
 | Immich server | Photo and video management at `https://immich.dejima.men`; direct LAN alias `http://immich.n100.lan` | Existing NFS media directory |
-| Machine learning | Facial recognition and smart search; KEDA scales it from zero on demand | K3s `local-path` model-cache PVC on `n100` |
+| Machine learning | Facial recognition and smart search; KEDA keeps one worker available on `p51` | Pod-local ephemeral model cache; models are downloaded again after pod replacement |
 | PostgreSQL | Immich metadata and asset paths | K3s `local-path` PVC on `n100` |
 | Valkey | Ephemeral queue and cache | None |
 
-Immich is migrated from the live NixOS service in a maintenance window. Its
-server and machine-learning deployments are initially scaled to zero, so Argo
-CD can create the destination database without exposing an empty library. The
-final NixOS PostgreSQL 18 logical dump is restored before either deployment is
-started. PostgreSQL remains on `n100` because it uses `local-path`; its live
-data must never use NFS.
+Immich was migrated from the live NixOS service in a maintenance window. The
+final NixOS PostgreSQL 18 logical dump was restored before the server and
+machine-learning worker were started. PostgreSQL remains on `n100` because it
+uses `local-path`; its live data must never use NFS.
 
 The application mounts the existing NAS directories directly through retained
 static PVs instead of dynamically provisioning replacements:
