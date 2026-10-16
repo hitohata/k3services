@@ -20,8 +20,6 @@ PostgreSQL uses `local-path`; its live data must not be placed on NFS. The
 Immich media directory remains NFS-backed so it stays exactly where the NixOS
 service wrote it. The model cache is also local to `n100`.
 
-The first machine-learning request after an idle period is a cold start. The
-KEDA HTTP interceptor holds the request while it starts the worker; model files
-remain in the local cache PVC, but loading them can still take time. The
-cooldown is `600` seconds. Change `cooldownPeriod` in `deployment.yaml` only
-if this startup delay proves acceptable for a shorter idle interval.
+The machine-learning worker remains running so face detection and other model
+requests do not wait for a scale-up cold start. KEDA keeps its minimum at one
+replica, and the model cache remains on the local PVC.
