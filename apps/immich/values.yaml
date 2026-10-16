@@ -15,7 +15,7 @@ controllers:
     containers:
       main:
         image:
-          tag: v3.2.0
+          tag: v3.3.3
         env:
           DB_HOSTNAME: immich-postgresql
           DB_USERNAME: postgres
@@ -73,11 +73,16 @@ server:
                 identifier: main
 
 machine-learning:
+  defaultPodOptions:
+    nodeSelector:
+      kubernetes.io/hostname: p51
   controllers:
     main:
       replicas: 1
       containers:
         main:
+          image:
+            tag: v3.3.3
           resources:
             requests:
               cpu: 250m
@@ -86,5 +91,5 @@ machine-learning:
               memory: 4Gi
   persistence:
     cache:
-      type: persistentVolumeClaim
-      existingClaim: immich-model-cache
+      enabled: true
+      type: emptyDir

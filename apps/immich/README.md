@@ -14,12 +14,20 @@ The application mounts the existing NAS directories directly:
 
 The official Immich Helm chart (pinned to `0.13.4`) deploys the server and
 machine-learning workloads. The server and machine-learning images are pinned
-to Immich `v3.2.0`. PostgreSQL, the cache, and both Immich workloads are pinned
-to `n100`.
+to Immich `v3.3.3`. PostgreSQL and the server run on `n100`; the ML worker runs
+on `p51`.
 PostgreSQL uses `local-path`; its live data must not be placed on NFS. The
 Immich media directory remains NFS-backed so it stays exactly where the NixOS
-service wrote it. The model cache is also local to `n100`.
+service wrote it.
 
 The machine-learning worker remains running so face detection and other model
 requests do not wait for a scale-up cold start. KEDA keeps its minimum at one
-replica, and the model cache remains on the local PVC.
+replica. The model cache uses pod-local ephemeral storage, so model files are
+downloaded again if the pod is replaced. The cache contains no user photos or
+recognition results.
+
+## Future work
+
+- Once shared persistent storage is introduced, move the machine-learning
+  model cache to a shared PV so model files survive pod replacement and can be
+  reused across workers.
