@@ -200,7 +200,7 @@ Bitnami Helm source within the same Argo CD Application.
 | Component | Purpose | Storage |
 | --- | --- | --- |
 | Immich server | Photo and video management at `https://immich.dejima.men`; direct LAN alias `http://immich.n100.lan` | Existing NFS media directory |
-| Machine learning | Facial recognition and smart search; KEDA keeps one worker available on `p51` | Pod-local ephemeral model cache; models are downloaded again after pod replacement |
+| Machine learning | Facial recognition and smart search; KEDA keeps one worker available on any eligible node | Pod-local ephemeral model cache; models are downloaded again after pod replacement |
 | PostgreSQL | Immich metadata and asset paths | K3s `local-path` PVC on `n100` |
 | Valkey | Ephemeral queue and cache | None |
 
@@ -222,10 +222,9 @@ This preserves the paths recorded in the Immich database. The
 `nfs-client-immich` StorageClass is reserved for future Immich-specific NFS
 claims; it must not replace the static migration claims.
 
-KEDA's HTTP interceptor starts the machine-learning worker when the Immich
-server sends it work and returns it to zero replicas after ten idle minutes.
-The model cache remains local to `n100`, but the first ML request after an idle
-period waits for the worker and models to load.
+KEDA's HTTP interceptor routes machine-learning requests while one worker stays
+available on any eligible cluster node. The pod-local model cache is discarded
+when the worker pod is replaced, so models are downloaded again as needed.
 
 ## Vaultwarden components
 

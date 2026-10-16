@@ -2,8 +2,6 @@
 # external to the chart: the PostgreSQL 18 destination matches the NixOS source
 # database, and Valkey remains the small ephemeral deployment in deployment.yaml.
 defaultPodOptions:
-  nodeSelector:
-    kubernetes.io/hostname: n100
   automountServiceAccountToken: false
   enableServiceLinks: false
   securityContext:
@@ -73,9 +71,6 @@ server:
                 identifier: main
 
 machine-learning:
-  defaultPodOptions:
-    nodeSelector:
-      kubernetes.io/hostname: p51
   controllers:
     main:
       replicas: 1

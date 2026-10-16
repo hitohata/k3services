@@ -14,11 +14,10 @@ The application mounts the existing NAS directories directly:
 
 The official Immich Helm chart (pinned to `0.13.4`) deploys the server and
 machine-learning workloads. The server and machine-learning images are pinned
-to Immich `v3.3.3`. PostgreSQL and the server run on `n100`; the ML worker runs
-on `p51`.
-PostgreSQL uses `local-path`; its live data must not be placed on NFS. The
-Immich media directory remains NFS-backed so it stays exactly where the NixOS
-service wrote it.
+to Immich `v3.3.3`. Kubernetes can schedule the server and ML worker on any
+eligible cluster node. PostgreSQL remains on `n100` because its `local-path`
+storage is node-local. The Immich media directory remains NFS-backed so it
+stays exactly where the NixOS service wrote it.
 
 The machine-learning worker remains running so face detection and other model
 requests do not wait for a scale-up cold start. KEDA keeps its minimum at one
