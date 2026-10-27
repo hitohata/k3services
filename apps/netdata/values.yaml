@@ -1,6 +1,8 @@
 # Netdata's parent retains cluster metrics, while a child DaemonSet collects
 # host and container metrics from every node.
 image:
+  # Apply the security-fixed Agent release to parents, children, and k8sState.
+  tag: "v2.12.2"
   pullPolicy: IfNotPresent
 
 # The persistence init container only fixes permissions on each child's
