@@ -4,6 +4,14 @@ Netdata is deployed from the official Helm chart configured by `values.yaml`.
 The parent dashboard is available only on the LAN at
 `http://netdata.n100.lan`.
 
+The Agent image is explicitly pinned to `v2.12.2` through the shared
+`image.tag` value, covering the parent, every child collector, and the
+Kubernetes-state collector. This overrides the pinned chart's `v2.11.1`
+default and includes the security fixes in
+[the v2.12.2 release](https://github.com/netdata/netdata/releases/tag/v2.12.2).
+Updating this value restarts those workloads and briefly interrupts monitoring;
+the existing metrics and state volumes are retained.
+
 The chart runs a child collector on every node. Those pods intentionally use
 host PID, IPC and networking, mount host paths, and request `SYS_PTRACE` and
 `SYS_ADMIN`, as required for host and container monitoring. Review upstream
