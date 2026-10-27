@@ -14,6 +14,10 @@ LinuxServer image initializes as root and runs Sonarr with PUID/PGID 1000,
 `TZ=America/Vancouver`, and `UMASK=002`. A non-root init container creates
 missing media directories without changing NAS ownership.
 
+Startup, readiness, and liveness probes request `/ping` with `Host: localhost`.
+Sonarr's host filtering allows localhost; the default pod-IP Host header is
+rejected with HTTP 400 after a pod replacement and causes repeated restarts.
+
 Complete authentication setup and configure naming, indexers, download clients,
 and quality profiles using [the media setup guide](../../../docs/media-stack.md).
 Configure scheduled backups under Settings → General and download/copy backups
