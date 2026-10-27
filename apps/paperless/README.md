@@ -5,6 +5,9 @@ directory. Paperless, PostgreSQL, and Valkey are pinned to `n100`. The web
 application is available through the TLS-terminating gateway at
 `https://paperless.dejima.men`.
 
+Paperless-ngx is pinned to `3.3.4`. The document export job uses the same image
+version as the application.
+
 The committed SealedSecret creates the initial `admin` account. After the first
 successful sync, retrieve its generated password with:
 

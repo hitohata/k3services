@@ -59,7 +59,7 @@ spec:
                   mountPath: /staging
           containers:
             - name: archive
-              image: docker.io/alpine:3.22.1
+              image: docker.io/alpine:3.22.7
               imagePullPolicy: IfNotPresent
               command:
                 - /bin/sh
