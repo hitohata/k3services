@@ -3,7 +3,7 @@ replicaCount: 1
 # Chart 9.3.0 has not yet released with the Nextcloud 35 image. Pin the
 # application image explicitly so both the main Deployment and CronJob use it.
 image:
-  tag: 35.0.1
+  tag: 35.0.2
 
 # Keep this stack off p51, whose local storage is an SD card. MariaDB's
 # local-path PVC is therefore always provisioned on n100.

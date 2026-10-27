@@ -40,7 +40,7 @@ spec:
       # Only create missing directories as the media user; never chown existing NAS data.
       initContainers:
         - name: media-directories
-          image: docker.io/alpine:3.22.1
+          image: docker.io/alpine:3.22.7
           command:
             - /bin/sh
             - -ec
