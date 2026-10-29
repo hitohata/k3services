@@ -87,6 +87,10 @@
           url: https://netdata.dejima.men
           fields: ["warnings", "criticals"]
 - Administration:
+    - OpenMediaVault:
+        icon: openmediavault.png
+        href: https://pi-nas.dejima.men
+        description: NAS administration
     - WUD:
         icon: whats-up-docker.png
         href: https://wud.dejima.men
