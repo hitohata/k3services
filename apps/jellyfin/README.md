@@ -46,6 +46,12 @@ transcoding performance. `jellyfin-config-backup` runs daily at 04:15 UTC. It
 uses SQLite's online backup command for `jellyfin.db` and archives the remaining
 configuration files, retaining 14 days of backups on the NAS.
 
+The backup images are pinned to `keinos/sqlite3:3.54.1` and `alpine:3.24.3`.
+They retain the SQLite online backup and compressed configuration archive
+format. The SQLite CLI uses `-readonly`; the newer image rejects the previous
+`-uri` option. After syncing, verify the next scheduled job and test restoring its
+database and archive before relying on the new backup images.
+
 Hardware transcoding is intentionally not enabled: the deployment does not
 grant access to host GPU devices. Enable it only after installing an appropriate
 Kubernetes device plugin and confirming the required device permissions.

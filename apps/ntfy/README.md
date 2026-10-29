@@ -15,5 +15,12 @@ topic access. Restrict the TLS gateway to trusted users before using topic
 names for sensitive notifications, or add ntfy authentication as a separately
 managed credential change.
 
-The image is pinned to ntfy 2.14.0. Review upstream release notes before
-updating it.
+The image is pinned to ntfy 2.34.0. Review the
+[upstream release notes](https://docs.ntfy.sh/releases/) before updating it.
+The upgrade from 2.14.0 migrates the SQLite cache automatically. Copy the cache
+while the service is stopped before upgrading if its retained messages matter;
+restore that copy with the old image for rollback to 2.14.0. After syncing,
+verify publishing, subscriptions, and replay of cached messages. Reconnects
+using `since=<message ID>` may replay messages from the same second; custom
+subscribers should deduplicate by message ID. Cache replays are now size- and
+bandwidth-limited, so unusually large polls may return HTTP 429.

@@ -24,3 +24,14 @@ Secret named `nextcloud-credentials` in the `nextcloud` namespace.
 
 See [the system structure guide](../../docs/structure.md) for the deployed
 components, storage layout, backup policy, upgrades, and recovery process.
+
+## Database backup client
+
+The `nextcloud-db-backup` CronJob pins its `mariadb-dump` client to
+`mariadb:12.3.3` (LTS). The live MariaDB server remains pinned to `12.0.2`;
+changing a backup client does not upgrade the database. The job uses Bash
+`pipefail` so dump errors fail the job, writes to a `.partial` file, and only
+publishes a `.sql.gz` backup and prunes old dumps after successful compression.
+Use a recent MariaDB client for restores because dumps include a sandbox-mode
+command that older clients and the MySQL client may reject. After syncing,
+check the next scheduled backup and test a restore against MariaDB 12.0.2.

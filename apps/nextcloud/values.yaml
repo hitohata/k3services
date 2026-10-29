@@ -227,15 +227,19 @@ extraManifests:
                 kubernetes.io/hostname: n100
               containers:
                 - name: mariadb-dump
-                  image: mariadb:12.0.2
+                  # Only the dump client is upgraded; the database server stays pinned.
+                  image: mariadb:12.3.3
                   command:
-                    - /bin/sh
+                    - /bin/bash
                     - -ec
                   args:
                     - |
+                      set -o pipefail
                       export MYSQL_PWD="$(cat /credentials/mariadb-password)"
                       backup_file="/backups/nextcloud-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
-                      mariadb-dump --single-transaction --default-character-set=utf8mb4 --host=nextcloud-mariadb --user=nextcloud nextcloud | gzip > "$backup_file"
+                      trap 'rm -f "$backup_file.partial"' EXIT
+                      mariadb-dump --single-transaction --default-character-set=utf8mb4 --host=nextcloud-mariadb --user=nextcloud nextcloud | gzip > "$backup_file.partial"
+                      mv "$backup_file.partial" "$backup_file"
                       find /backups -type f -name 'nextcloud-*.sql.gz' -mtime +13 -delete
                   volumeMounts:
                     - name: credentials

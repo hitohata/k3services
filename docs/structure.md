@@ -548,6 +548,11 @@ with the commands in
 The `nextcloud-db-backup` CronJob runs daily at 02:30 UTC. It runs
 `mariadb-dump --single-transaction --default-character-set=utf8mb4`, compresses
 the result, and retains 14 daily dumps in `/Pi-NAS/nextcloud/backups`.
+The dump client uses the pinned MariaDB 12.3.3 LTS image while the live server
+remains on 12.0.2. Bash `pipefail` propagates dump failures; a temporary
+`.partial` file is renamed to `.sql.gz` only after the pipeline succeeds, and
+retention runs only after that rename. Restore using a recent MariaDB client
+that supports the sandbox-mode command emitted by `mariadb-dump`.
 
 For a complete Nextcloud recovery, retain all of the following:
 

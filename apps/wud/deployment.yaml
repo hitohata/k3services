@@ -71,7 +71,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: wud
-          image: docker.io/getwud/wud:9.1.0
+          image: docker.io/getwud/wud:9.6.0
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
