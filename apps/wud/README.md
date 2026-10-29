@@ -12,8 +12,13 @@ discovery and image architecture detection.
 
 WUD's SQLite database, discovered-image state, and UI configuration are stored
 on the `wud-store` `local-path` PVC on `n100`. This operational state is not a
-backup source. The deployment is intentionally pinned to WUD 9.1.0; review
+backup source. The deployment is intentionally pinned to WUD 9.6.0; review
 upstream release notes before changing the image version.
+
+The [9.6.0 release](https://github.com/getwud/wud/releases/tag/9.6.0) remains
+on the existing 9.x configuration. After syncing, verify administrator login
+and Kubernetes discovery, including CronJob images. Snapshot the store PVC
+before upgrading if retaining its monitoring history is important.
 
 WUD requires an administrator account. Before syncing the application, create
 the encrypted credentials:

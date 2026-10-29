@@ -38,12 +38,12 @@ spec:
               type: RuntimeDefault
           initContainers:
             - name: database-backup
-              image: docker.io/keinos/sqlite3:3.51.2
+              image: docker.io/keinos/sqlite3:3.54.1
               imagePullPolicy: IfNotPresent
               command:
                 - sqlite3
               args:
-                - -uri
+                - -readonly
                 - file:/config/data/jellyfin.db?mode=ro
                 - .backup /staging/jellyfin.db
               securityContext:
@@ -59,7 +59,7 @@ spec:
                   mountPath: /staging
           containers:
             - name: archive
-              image: docker.io/alpine:3.22.7
+              image: docker.io/alpine:3.24.3
               imagePullPolicy: IfNotPresent
               command:
                 - /bin/sh
