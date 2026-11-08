@@ -42,6 +42,9 @@ valkey:
   enabled: false
 
 server:
+  defaultPodOptions:
+    nodeSelector:
+      kubernetes.io/hostname: n100
   controllers:
     main:
       replicas: 1

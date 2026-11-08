@@ -207,7 +207,8 @@ Bitnami Helm source within the same Argo CD Application.
 Immich was migrated from the live NixOS service in a maintenance window. The
 final NixOS PostgreSQL 18 logical dump was restored before the server and
 machine-learning worker were started. PostgreSQL remains on `n100` because it
-uses `local-path`; its live data must never use NFS.
+uses `local-path`; its live data must never use NFS. Keep the server on `n100`
+as well: the `immich-library` NFS volume currently fails to mount on `p41`.
 
 The application mounts the existing NAS directories directly through retained
 static PVs instead of dynamically provisioning replacements:
