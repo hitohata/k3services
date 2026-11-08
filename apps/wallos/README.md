@@ -22,3 +22,17 @@ PVC, and restart the deployment. Keep an off-NAS copy for NAS failure recovery.
 
 The image is pinned to Wallos 5.11.1. Review the
 [upstream releases](https://github.com/ellite/Wallos/releases) before updating.
+
+## Optional setup
+
+The container timezone is `Asia/Tokyo`; select JPY as the main currency in
+Wallos after creating the account. Configure an exchange-rate provider if
+tracking subscriptions in other currencies.
+
+Future options include payment and cancellation reminders through the existing
+ntfy service, and OIDC login through Authentik. Internal integration endpoints
+may require the Wallos SSRF allowlist; see the
+[upstream configuration](https://github.com/ellite/Wallos#oidc).
+For backup operations, consider failure notifications, periodic restore tests,
+and NAS snapshots or replication to another device. These integrations are
+not configured by the current manifests.
