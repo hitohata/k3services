@@ -35,3 +35,4 @@ For the Kubernetes Jellyfin/Arr media suite, see
 See [the structure guide](docs/structure.md) for the Argo CD layout, NFS
 storage, Nextcloud, Mealie, Vaultwarden, IT-Tools, Netdata, Paperless-ngx, and
 Forgejo, Jellyfin, and Linkwarden services, encrypted credentials, and backups.
+The structure guide also covers Wallos subscription tracking and its backups.

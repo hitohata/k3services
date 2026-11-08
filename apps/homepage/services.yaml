@@ -31,6 +31,10 @@
         icon: ntfy.png
         href: https://ntfy.dejima.men
         description: Push notifications
+    - Wallos:
+        icon: wallos.png
+        href: https://wallos.dejima.men
+        description: Subscription tracking
 - Media:
     - Immich:
         icon: immich.png
