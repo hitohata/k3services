@@ -6,5 +6,6 @@ Homepage provides the service dashboard at `https://homepage.dejima.men` and
 container image.
 
 The Media group includes Jellyfin, Sonarr, Radarr, Bazarr, and Jellyseerr/Seerr.
+The Productivity group includes Wallos for subscription tracking.
 The Arr administration links use LAN hostnames; see
 [the media setup guide](../../docs/media-stack.md).

@@ -65,6 +65,10 @@ root-app/apps.yaml
     └── deployment.yaml                 workflow automation, data storage, service and ingress
 ├── apps/ntfy/
     └── deployment.yaml                 notification server, cache storage, service and ingress
+├── apps/wallos/
+│   ├── kustomization.yaml              package for Wallos resources
+│   ├── deployment.yaml                 subscription tracker, local storage, service and ingress
+│   └── backup.yaml                     SQLite and uploaded-logo backup
 ├── apps/wud/
 │   ├── deployment.yaml                 container update monitor, RBAC, storage, service and ingress
 │   └── secrets/                        encrypted WUD administrator credentials
@@ -469,6 +473,20 @@ for forwarded headers from Traefik. Anonymous topic access is enabled, so the
 gateway must limit access to trusted users before sensitive notification topics
 are used.
 
+## Wallos components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Wallos | Subscription tracking at `https://wallos.dejima.men`; LAN alias `http://wallos.n100.lan` | K3s `local-path` database and uploaded-logo PVCs on `n100` |
+| Backup CronJob | Daily SQLite backup and uploaded-logo archive | NFS backup PVC |
+
+Wallos runs as one replica on `n100` because its SQLite database uses local
+storage. Its container includes nginx, PHP-FPM, and scheduled maintenance jobs.
+The gateway terminates TLS for the public URL. The dedicated
+`nfs-client-wallos` StorageClass provisions the backup directory at
+`/Pi-NAS/wallos/wallos-backups`. Register the initial account promptly after
+deployment, then configure account creation according to the intended users.
+
 ## WUD components
 
 | Component | Purpose | Storage |
@@ -605,6 +623,15 @@ stop Navidrome, replace `navidrome.db` on the `navidrome-data` PVC with a
 selected backup, remove stale `navidrome.db-wal` and `navidrome.db-shm` files,
 then start the deployment. Music remains on the NAS and is deliberately not
 duplicated by this job.
+
+## Wallos backups and recovery
+
+The `wallos-backup` CronJob runs daily at 05:00 UTC and retains 14 backup
+directories in `/Pi-NAS/wallos/wallos-backups`. Each contains a consistent
+`wallos.db` SQLite snapshot and `logos.tar.gz`. To recover, stop Wallos, restore
+the database to its DB PVC and extract the archive into its logos PVC. Remove
+stale SQLite WAL and SHM files before restarting. Replicate backups off the NAS
+to protect against NAS failure.
 
 ## Forgejo backups and recovery
 

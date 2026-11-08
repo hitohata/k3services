@@ -118,6 +118,30 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
+# wallos
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wallos
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hitohata/k3services
+    targetRevision: HEAD
+    path: apps/wallos
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wallos
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
 # WUD encrypted credentials
 apiVersion: argoproj.io/v1alpha1
 kind: Application
