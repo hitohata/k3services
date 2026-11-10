@@ -1,4 +1,8 @@
 - Productivity:
+    - Firefly III:
+        icon: firefly-iii.png
+        href: https://firefly-iii.dejima.men
+        description: Personal finance and recurring transactions
     - Nextcloud:
         icon: nextcloud.png
         href: https://nextcloud.dejima.men
@@ -31,10 +35,6 @@
         icon: ntfy.png
         href: https://ntfy.dejima.men
         description: Push notifications
-    - Wallos:
-        icon: wallos.png
-        href: https://wallos.dejima.men
-        description: Subscription tracking
 - Media:
     - Immich:
         icon: immich.png

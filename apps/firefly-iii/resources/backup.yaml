@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: firefly-iii-backups
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-client-firefly-iii
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: firefly-iii-backup
+spec:
+  schedule: "15 5 * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 3600
+      backoffLimit: 2
+      template:
+        spec:
+          automountServiceAccountToken: false
+          restartPolicy: OnFailure
+          nodeSelector:
+            kubernetes.io/hostname: n100
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 33
+            runAsGroup: 33
+            fsGroup: 33
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: backup
+              image: docker.io/library/postgres:17.11-trixie
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/bash
+                - -ec
+              args:
+                - |
+                  umask 077
+                  archive="/backups/firefly-iii-$(date -u +%Y%m%dT%H%M%SZ).tar.gz"
+                  trap 'rm -f "${archive}.partial"' EXIT
+                  pg_dump --host=firefly-iii-postgresql --username=firefly --format=custom --file=/staging/database.dump firefly
+                  tar -czf "${archive}.partial" -C /staging database.dump -C /data upload
+                  mv "${archive}.partial" "$archive"
+                  find /backups -type f -name 'firefly-iii-*.tar.gz' -mtime +13 -delete
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: firefly-iii-credentials
+                      key: DB_PASSWORD
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: upload
+                  mountPath: /data/upload
+                  readOnly: true
+                - name: staging
+                  mountPath: /staging
+                - name: backups
+                  mountPath: /backups
+          volumes:
+            - name: upload
+              persistentVolumeClaim:
+                claimName: firefly-iii-upload
+            - name: staging
+              emptyDir: {}
+            - name: backups
+              persistentVolumeClaim:
+                claimName: firefly-iii-backups
