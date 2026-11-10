@@ -1,38 +1,29 @@
-# Wallos
+# Wallos retirement
 
-Wallos tracks recurring subscriptions and expenses. It is available through
-the TLS-terminating gateway at `https://wallos.dejima.men` and directly on the
-LAN at `http://wallos.n100.lan`. Create the first account promptly after the
-application becomes reachable; Wallos presents a registration page on a fresh
-database.
+Firefly III replaces Wallos with a fresh installation. Existing Wallos data is
+intentionally discarded; no migration, final backup, or rollback copy is made.
 
-The single replica runs on `n100`. The `wallos-db` and `wallos-logos` PVCs use
-`local-path` storage for SQLite and uploaded images, respectively. The upstream
-container listens on port 80 and starts nginx, PHP-FPM and its own scheduled
-jobs. Its startup script requires root to change the `www-data` ownership of
-these directories and start the services. The pod has no Kubernetes API token.
+The existing `wallos` Argo CD Application stays in place to reconcile cleanup.
+Its automated prune removes the old Deployment, Service, Ingress, backup
+CronJob, and the `wallos-db`, `wallos-logos`, and `wallos-backups` PVCs.
+`allowEmpty: true` permits removing all ordinary resources. Removing the
+Application itself would orphan resources because it has no deletion finalizer.
 
-The `wallos-backup` CronJob runs daily at 05:00 UTC. It makes a SQLite online
-backup and archives uploaded logos into
-`/Pi-NAS/wallos/wallos-backups/wallos-<UTC timestamp>/`. It retains backups for
-14 days on the dedicated `nfs-client-wallos` StorageClass. To restore, stop the
-Wallos deployment, copy `wallos.db` into the DB PVC, remove any stale
-`wallos.db-wal` and `wallos.db-shm` files, extract `logos.tar.gz` into the logos
-PVC, and restart the deployment. Keep an off-NAS copy for NAS failure recovery.
+The database and logos use local-path volumes on `n100`; their existing PV
+reclaim policies determine file deletion (normally Delete for local-path).
+The backup PV uses Retain, so PVC removal alone does not erase NAS archives.
+The PostSync `wallos-backups-cleanup` hook mounts only
+`192.168.10.100:/Pi-NAS/wallos/wallos-backups` and deletes all contents after
+pruning completes. UID/GID 82 matches the former backup job. The NAS must allow
+that account to traverse and delete those files. A failed hook remains visible
+for investigation; successful hook Jobs delete themselves. A later sync may
+repeat this idempotent cleanup. The mount directory and released retained PV
+metadata may remain, but successful cleanup leaves no backup files.
 
-The image is pinned to Wallos 5.11.1. Review the
-[upstream releases](https://github.com/ellite/Wallos/releases) before updating.
+The `nfs-client-wallos` StorageClass is also removed. Other service data and NAS
+paths are unchanged. Cleanup does not wait for Firefly III to become healthy;
+prepare its SealedSecret, DNS, and gateway route before cutover. See
+[the Firefly III guide](../firefly-iii/README.md).
 
-## Optional setup
-
-The container timezone is `Asia/Tokyo`; select JPY as the main currency in
-Wallos after creating the account. Configure an exchange-rate provider if
-tracking subscriptions in other currencies.
-
-Future options include payment and cancellation reminders through the existing
-ntfy service, and OIDC login through Authentik. Internal integration endpoints
-may require the Wallos SSRF allowlist; see the
-[upstream configuration](https://github.com/ellite/Wallos#oidc).
-For backup operations, consider failure notifications, periodic restore tests,
-and NAS snapshots or replication to another device. These integrations are
-not configured by the current manifests.
+These are GitOps changes only. Actual resource and data deletion happens when
+Argo CD synchronizes them; no live-cluster operations were performed here.

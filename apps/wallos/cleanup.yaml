@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wallos-backups-cleanup
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  activeDeadlineSeconds: 600
+  backoffLimit: 2
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: OnFailure
+      nodeSelector:
+        kubernetes.io/hostname: n100
+      securityContext:
+        runAsNonRoot: true
+        # Match the former Wallos backup job's ownership on the NAS.
+        runAsUser: 82
+        runAsGroup: 82
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cleanup
+          image: docker.io/alpine:3.22.7
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              # Only the old Wallos backup directory is mounted here.
+              find /wallos-backups -mindepth 1 -delete
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: backups
+              mountPath: /wallos-backups
+      volumes:
+        - name: backups
+          nfs:
+            server: 192.168.10.100
+            path: /Pi-NAS/wallos/wallos-backups

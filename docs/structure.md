@@ -16,6 +16,9 @@ root-app/apps.yaml
 ├── infrastructure/traefik/            trusted forwarded headers for K3s Traefik
 ├── apps/keda/                          event-driven autoscaling and HTTP interception
 ├── apps/authentik/                    identity and access management
+├── apps/firefly-iii/
+│   ├── resources/                      application, PostgreSQL, uploads, cron, ingress and backups
+│   └── secrets/                        credential template; operator supplies SealedSecret
 ├── apps/homepage/                     service dashboard
 ├── sealed-secrets Helm chart           encrypted-secret controller
 ├── apps/nextcloud/
@@ -66,9 +69,8 @@ root-app/apps.yaml
 ├── apps/ntfy/
     └── deployment.yaml                 notification server, cache storage, service and ingress
 ├── apps/wallos/
-│   ├── kustomization.yaml              package for Wallos resources
-│   ├── deployment.yaml                 subscription tracker, local storage, service and ingress
-│   └── backup.yaml                     SQLite and uploaded-logo backup
+│   ├── kustomization.yaml              Wallos retirement package
+│   └── cleanup.yaml                    PostSync deletion of old NAS backup files
 ├── apps/wud/
 │   ├── deployment.yaml                 container update monitor, RBAC, storage, service and ingress
 │   └── secrets/                        encrypted WUD administrator credentials
@@ -139,6 +141,41 @@ StorageClass:
 /Pi-NAS/authentik/
 └── authentik-backups/  # daily PostgreSQL dumps
 ```
+
+## Firefly III components
+
+| Component | Purpose | Storage |
+| --- | --- | --- |
+| Firefly III | Personal finance at `https://firefly-iii.dejima.men` | K3s `local-path` upload PVC on `n100` |
+| PostgreSQL | Firefly III's transactional database | K3s `local-path` PVC on `n100` |
+| CronJob | Daily recurring transactions at 03:00 Asia/Tokyo | None |
+| Backup CronJob | Daily database dump and upload archive at 05:15 UTC | NFS backup PVC |
+
+Firefly III replaces Wallos with a fresh installation. Wallos workloads and
+all three PVCs are pruned, and a PostSync hook erases the old NAS backup files.
+Existing subscriptions and data are discarded without migration. Firefly III uses
+the pinned official `version-6.7.9` image and official PostgreSQL
+`17.11-trixie` image, with a dedicated non-superuser application account.
+The operator must supply the SealedSecret from the provided example before
+deployment; credentials are synchronized by a separate wave-0 Application.
+
+The gateway terminates TLS and forwards the original HTTPS scheme through
+Traefik. Firefly III uses secure cookies and its own authentication; configure
+DNS, gateway routing, and TLS for the new hostname before use. There is no HTTP
+LAN alias or Data Importer. Database files and uploads stay on `n100`; daily
+archives are retained for 14 days using `nfs-client-firefly-iii`:
+
+```text
+/Pi-NAS/firefly-iii/
+└── firefly-iii-backups/  # PostgreSQL dump and upload archives
+```
+
+The backup job reads uploads as UID/GID 33 and requires write access to the NAS
+backup directory. The dump is transactionally consistent; attachment copies
+are not synchronized with writes, so pause writes for a coordinated manual
+backup. Recovery requires the original `APP_KEY` and database credentials,
+stored independently of the archives. See [the service guide](../apps/firefly-iii/README.md)
+for credential creation, cutover, and restore instructions.
 
 ## Nextcloud components
 
@@ -473,19 +510,25 @@ for forwarded headers from Traefik. Anonymous topic access is enabled, so the
 gateway must limit access to trusted users before sensitive notification topics
 are used.
 
-## Wallos components
+## Wallos retirement
 
-| Component | Purpose | Storage |
-| --- | --- | --- |
-| Wallos | Subscription tracking at `https://wallos.dejima.men`; LAN alias `http://wallos.n100.lan` | K3s `local-path` database and uploaded-logo PVCs on `n100` |
-| Backup CronJob | Daily SQLite backup and uploaded-logo archive | NFS backup PVC |
+The `wallos` Argo CD Application remains as a cleanup package. Automated prune
+removes the old Deployment, Service, Ingress, backup CronJob, and all three PVCs
+(`wallos-db`, `wallos-logos`, `wallos-backups`). `allowEmpty: true` permits
+pruning all ordinary resources. Keep the Application until retirement completes;
+removing it alone would orphan workloads because it has no deletion finalizer.
 
-Wallos runs as one replica on `n100` because its SQLite database uses local
-storage. Its container includes nginx, PHP-FPM, and scheduled maintenance jobs.
-The gateway terminates TLS for the public URL. The dedicated
-`nfs-client-wallos` StorageClass provisions the backup directory at
-`/Pi-NAS/wallos/wallos-backups`. Register the initial account promptly after
-deployment, then configure account creation according to the intended users.
+The local-path database and logo volumes follow their existing PV reclaim
+policies; the standard local-path Delete policy removes their files. The old
+NFS PV has Retain policy, so a PostSync hook mounts only
+`192.168.10.100:/Pi-NAS/wallos/wallos-backups` directly and deletes its contents
+as UID/GID 82, matching the former backup job. It runs after pruning, requires
+NAS access, and fails visibly if cleanup is denied. Successful hook Jobs delete
+themselves. The Wallos StorageClass is removed; no other NAS paths are touched.
+The empty NAS directory and released retained PV metadata may remain; they
+contain no backups after successful cleanup. Existing data is intentionally
+discarded, without export or migration. See
+[the retirement guide](../apps/wallos/README.md).
 
 ## WUD components
 
@@ -623,15 +666,6 @@ stop Navidrome, replace `navidrome.db` on the `navidrome-data` PVC with a
 selected backup, remove stale `navidrome.db-wal` and `navidrome.db-shm` files,
 then start the deployment. Music remains on the NAS and is deliberately not
 duplicated by this job.
-
-## Wallos backups and recovery
-
-The `wallos-backup` CronJob runs daily at 05:00 UTC and retains 14 backup
-directories in `/Pi-NAS/wallos/wallos-backups`. Each contains a consistent
-`wallos.db` SQLite snapshot and `logos.tar.gz`. To recover, stop Wallos, restore
-the database to its DB PVC and extract the archive into its logos PVC. Remove
-stale SQLite WAL and SHM files before restarting. Replicate backups off the NAS
-to protect against NAS failure.
 
 ## Forgejo backups and recovery
 

@@ -70,6 +70,54 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
+# Firefly III encrypted credentials
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: firefly-iii-secrets
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hitohata/k3services
+    targetRevision: HEAD
+    path: apps/firefly-iii/secrets
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: firefly-iii
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+# Firefly III
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: firefly-iii
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hitohata/k3services
+    targetRevision: HEAD
+    path: apps/firefly-iii/resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: firefly-iii
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
 # n8n
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -118,7 +166,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
-# wallos
+# Retired Wallos: prune workloads and PVCs, then erase NAS backups
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -138,6 +186,7 @@ spec:
   syncPolicy:
     automated:
       prune: true
+      allowEmpty: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
