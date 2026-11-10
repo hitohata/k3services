@@ -129,7 +129,12 @@ annotation limit.
 | Backup CronJob | Daily compressed PostgreSQL dump | NFS backup PVC |
 
 Authentik is rendered from the official Helm chart pinned to `2026.8.3`. Its
-server and worker run without Kubernetes API credentials; enable a dedicated
+public domain has a supplemental Ingress with a higher route priority that
+sets `X-Forwarded-Proto: https`, ensuring Authentik generates HTTPS API URLs
+even when upstream forwarding loses the original scheme. The public gateway
+must terminate TLS and redirect HTTP to HTTPS for this domain. The chart's
+Ingress still handles the direct LAN HTTP alias without this override.
+Its server and worker run without Kubernetes API credentials; enable a dedicated
 service account only when managed Kubernetes outposts are deliberately
 configured. PostgreSQL stays on `n100` for database performance, and the daily
 backup is retained for 14 days under the dedicated `nfs-client-authentik`
