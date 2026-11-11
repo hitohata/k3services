@@ -164,6 +164,12 @@ the pinned official `version-6.7.9` image and official PostgreSQL
 The operator must supply the SealedSecret from the provided example before
 deployment; credentials are synchronized by a separate wave-0 Application.
 
+Firefly III and PostgreSQL each request `25m` CPU, without a CPU limit, so
+both can schedule on the capacity-constrained `n100` and burst during startup.
+Together with its backup and cron jobs, this stack reserves up to `85m` CPU.
+Check node reservations when expanding the cluster's workload; actual idle CPU
+alone does not determine whether Kubernetes can schedule a pod.
+
 The gateway terminates TLS and forwards the original HTTPS scheme through
 Traefik. Firefly III uses secure cookies and its own authentication; configure
 DNS, gateway routing, and TLS for the new hostname before use. There is no HTTP

@@ -58,6 +58,15 @@ The application and PostgreSQL run on `n100`. PostgreSQL's 10Gi data PVC and the
 persisted from the application container, at `/var/www/html/storage/upload`,
 matching the upstream Docker deployment. Sessions and caches are ephemeral.
 
+The application and PostgreSQL each reserve `25m` CPU, with no CPU limit so
+initialization and requests can use available CPU. Together they reserve `50m`;
+including the `25m` backup job and `10m` cron job, Firefly III reserves at most
+`85m` CPU across these workloads. At the initial deployment, `n100` had `95m`
+of unreserved CPU despite only about 24% actual CPU usage. The former `100m`
+request on each Deployment left both pods Pending with `Insufficient cpu`.
+Recheck node CPU reservations when adding workloads; these values do not reserve
+capacity for other applications. Memory requests and limits remain unchanged.
+
 `firefly-iii-cron` calls the internal cron API at 03:00 Asia/Tokyo each
 day, using the Secret's `STATIC_CRON_TOKEN`. This processes recurring transactions
 and other scheduled tasks. The timezone matches the previous Wallos deployment.
