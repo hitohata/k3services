@@ -170,8 +170,10 @@ Together with its backup and cron jobs, this stack reserves up to `85m` CPU.
 Check node reservations when expanding the cluster's workload; actual idle CPU
 alone does not determine whether Kubernetes can schedule a pod.
 
-The gateway terminates TLS and forwards the original HTTPS scheme through
-Traefik. Firefly III uses secure cookies and its own authentication; configure
+The gateway terminates TLS and redirects HTTP to HTTPS for the Firefly III
+hostname. Its Traefik middleware sets `X-Forwarded-Proto: https` for the public
+route so the application generates HTTPS URLs. Firefly III uses secure cookies
+and its own authentication; configure
 DNS, gateway routing, and TLS for the new hostname before use. There is no HTTP
 LAN alias or Data Importer. Database files and uploads stay on `n100`; daily
 archives are retained for 14 days using `nfs-client-firefly-iii`:
