@@ -42,8 +42,9 @@ also requires changing the corresponding PostgreSQL role password; a restart
 alone does not update it.
 
 Configure gateway routing, DNS, and TLS for `firefly-iii.dejima.men` to reach
-Traefik's HTTP entry point. The gateway must supply `X-Forwarded-Proto: https`;
-see the [forwarded-header configuration](../../docs/structure.md#ingress-forwarded-headers).
+Traefik's HTTP entry point. The gateway must terminate TLS and redirect HTTP to
+HTTPS for this hostname. A Traefik middleware sets `X-Forwarded-Proto: https`
+for this public route so Firefly III generates HTTPS links and form actions.
 The application trusts proxy headers and uses secure cookies. Use the HTTPS
 hostname; no direct HTTP LAN alias is configured. Restrict initial access until
 you have created the first administrator account in the web interface. Firefly
