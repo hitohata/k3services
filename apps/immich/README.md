@@ -14,7 +14,7 @@ The application mounts the existing NAS directories directly:
 
 The official Immich Helm chart (pinned to `0.13.4`) deploys the server and
 machine-learning workloads. The server and machine-learning images are pinned
-to Immich `v3.3.5`. The server runs on `n100`, alongside PostgreSQL. Its NFS
+to Immich `v3.4.1`. The server runs on `n100`, alongside PostgreSQL. Its NFS
 media mount currently fails on `p41`, so keep the server on the node where the
 existing mount works. The ML worker can run on any eligible cluster node.
 PostgreSQL remains on `n100` because its `local-path` storage is node-local.
