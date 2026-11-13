@@ -21,6 +21,11 @@ PostgreSQL remains on `n100` because its `local-path` storage is node-local.
 The Immich media directory remains NFS-backed so it stays exactly where the
 NixOS service wrote it.
 
+Server upgrades stop the old pod before starting its replacement
+(`maxSurge: 0`, `maxUnavailable: 1`). This avoids requiring CPU for two server
+pods on `n100` during a rollout and causes a brief outage while the replacement
+starts. The node must still have capacity for one server pod.
+
 The machine-learning worker remains running so face detection and other model
 requests do not wait for a scale-up cold start. KEDA keeps its minimum at one
 replica. The model cache uses pod-local ephemeral storage, so model files are
