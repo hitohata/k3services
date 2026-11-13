@@ -264,6 +264,9 @@ final NixOS PostgreSQL 18 logical dump was restored before the server and
 machine-learning worker were started. PostgreSQL remains on `n100` because it
 uses `local-path`; its live data must never use NFS. Keep the server on `n100`
 as well: the `immich-library` NFS volume currently fails to mount on `p41`.
+Server rollouts use no surge pods and allow one unavailable replica, freeing
+the old pod's CPU reservation before its replacement starts. Upgrades therefore
+cause a brief server outage and require capacity for one server pod on `n100`.
 
 The application mounts the existing NAS directories directly through retained
 static PVs instead of dynamically provisioning replacements:
