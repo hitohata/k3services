@@ -8,6 +8,10 @@ container image.
 The Productivity group includes Firefly III for personal finance and recurring
 transactions at `https://firefly-iii.dejima.men`.
 
+The Administration group links to the Longhorn replicated-storage guide.
+Longhorn's management UI remains internal and is accessed with a local
+port-forward; the dashboard does not expose a storage administration endpoint.
+
 The Media group includes Jellyfin, Sonarr, Radarr, Bazarr, and Jellyseerr/Seerr.
 The Arr administration links use LAN hostnames; see
 [the media setup guide](../../docs/media-stack.md).

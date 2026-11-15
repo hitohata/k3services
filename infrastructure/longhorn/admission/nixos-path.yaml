@@ -1,0 +1,70 @@
+apiVersion: policies.kyverno.io/v1
+kind: NamespacedMutatingPolicy
+metadata:
+  name: longhorn-nixos-path
+  namespace: longhorn-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  failurePolicy: Fail
+  reinvocationPolicy: IfNeeded
+  evaluation:
+    admission:
+      enabled: true
+    mutateExisting:
+      enabled: false
+  autogen:
+    mutatingAdmissionPolicy:
+      enabled: false
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE]
+        resources: [pods]
+  matchConditions:
+    - name: longhorn-namespace
+      expression: object.metadata.namespace == 'longhorn-system'
+  variables:
+    # Verified from both AMD64 and ARM64 image configurations on 2026-11-15.
+    - name: imagePaths
+      expression: >-
+        {
+          'docker.io/longhornio/longhorn-engine:v1.13.0': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/longhorn-manager:v1.13.0': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/longhorn-ui:v1.13.0': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/longhorn-instance-manager:v1.13.0': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/longhorn-share-manager:v1.13.0': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/backing-image-manager:v1.13.0': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/support-bundle-kit:v0.0.98': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/csi-attacher:v4.13.0': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/csi-provisioner:v6.3.0': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/csi-node-driver-registrar:v2.18.0': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/csi-resizer:v2.2.1': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/csi-snapshotter:v8.6.0': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+          'docker.io/longhornio/livenessprobe:v2.20.0': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+        }
+    - name: containers
+      expression: >-
+        object.spec.containers.map(c, {'field': dyn('containers'), 'index': dyn(object.spec.containers.indexOf(c)), 'container': dyn(c)}) +
+        (has(object.spec.initContainers) ?
+          object.spec.initContainers.map(c, {'field': dyn('initContainers'), 'index': dyn(object.spec.initContainers.indexOf(c)), 'container': dyn(c)}) : [])
+    - name: paths
+      expression: >-
+        variables.containers.map(c,
+          has(c.container.env) && c.container.env.exists(e, e.name == 'PATH') ?
+            c.container.env.filter(e, e.name == 'PATH')[0].value : variables.imagePaths[c.container.image])
+  mutations:
+    - patchType: JSONPatch
+      jsonPatch:
+        expression: >-
+          variables.containers.map(c, JSONPatch{
+            op: 'add',
+            path: '/spec/' + c.field + '/' + string(c.index) + '/env',
+            value: (has(c.container.env) ? c.container.env.filter(e, e.name != 'PATH') : []) +
+              [{'name': 'PATH', 'value':
+                variables.paths[variables.containers.indexOf(c)] +
+                  (variables.paths[variables.containers.indexOf(c)].split(':').exists(p, p == '/run/current-system/sw/bin') ?
+                    '' : ':/run/current-system/sw/bin')}]
+          })

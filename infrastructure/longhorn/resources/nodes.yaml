@@ -1,0 +1,42 @@
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: n100
+  namespace: longhorn-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  allowScheduling: true
+  tags:
+    - replicated-ssd
+  disks:
+    ssd:
+      path: /var/lib/longhorn
+      diskType: filesystem
+      allowScheduling: true
+      storageReserved: 68719476736
+      tags:
+        - ssd
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: p41
+  namespace: longhorn-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  allowScheduling: true
+  tags:
+    - replicated-ssd
+  disks:
+    ssd:
+      # Host prerequisite: bind /mnt/ssd/longhorn here before starting K3s.
+      path: /var/lib/longhorn
+      diskType: filesystem
+      allowScheduling: true
+      storageReserved: 34359738368
+      tags:
+        - ssd

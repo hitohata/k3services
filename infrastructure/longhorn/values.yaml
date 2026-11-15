@@ -1,0 +1,65 @@
+# Manual activation only: see README.md for the NixOS and node-label gates.
+global:
+  nodeSelector:
+    storage.dejima.men/longhorn: "true"
+
+# Use a separately managed, non-default StorageClass in resources/.
+persistence:
+  createStorageClass: false
+  defaultClass: false
+
+# Helm upgrade hooks do not represent Argo CD's apply-based lifecycle.
+preUpgradeChecker:
+  jobEnabled: false
+
+csi:
+  kubeletRootDir: /var/lib/kubelet
+  attacherReplicaCount: 2
+  provisionerReplicaCount: 2
+  resizerReplicaCount: 2
+  snapshotterReplicaCount: 2
+  # Pilot volumes are unencrypted and reference no CSI Secrets.
+  allowControllerSecretAccess: false
+
+defaultSettings:
+  v1DataEngine: true
+  v2DataEngine: false
+  # No auto-created disks, including on p51. Explicit Nodes live in resources/.
+  createDefaultDiskLabeledNodes: true
+  defaultDataPath: /var/lib/longhorn
+  systemManagedComponentsNodeSelector: "storage.dejima.men/longhorn:true"
+  defaultReplicaCount:
+    v1: "2"
+    v2: "2"
+  replicaSoftAntiAffinity: false
+  replicaDiskSoftAntiAffinity: false
+  allowVolumeCreationWithDegradedAvailability: false
+  storageOverProvisioningPercentage: 100
+  storageMinimalAvailablePercentage: 25
+  concurrentReplicaRebuildPerNodeLimit: 1
+  # Automatic recovery is exercised only with disposable pilot data first.
+  nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
+  autoDeletePodWhenVolumeDetachedUnexpectedly: true
+  upgradeChecker: false
+  allowCollectingLonghornUsageMetrics: false
+  deletingConfirmationFlag: false
+
+longhornGlobalManager:
+  replicas: 2
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: longhorn-global-manager
+          topologyKey: kubernetes.io/hostname
+
+longhornUI:
+  replicas: 1
+
+service:
+  ui:
+    type: ClusterIP
+
+ingress:
+  enabled: false
