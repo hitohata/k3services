@@ -43,8 +43,16 @@ defaultSettings:
   upgradeChecker: false
   allowCollectingLonghornUsageMetrics: false
   deletingConfirmationFlag: false
+  priorityClass: longhorn-pilot
+
+longhornManager:
+  priorityClass: longhorn-pilot
+
+longhornDriver:
+  priorityClass: longhorn-pilot
 
 longhornGlobalManager:
+  priorityClass: longhorn-pilot
   replicas: 2
   affinity:
     podAntiAffinity:
@@ -55,6 +63,7 @@ longhornGlobalManager:
           topologyKey: kubernetes.io/hostname
 
 longhornUI:
+  priorityClass: longhorn-pilot
   replicas: 1
 
 service:

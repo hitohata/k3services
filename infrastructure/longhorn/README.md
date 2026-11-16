@@ -99,6 +99,10 @@ checks on both hosts remain necessary after offline mutation tests pass.
   Existing volumes may operate on one surviving copy during an outage.
 - V2 is disabled. Instance-manager CPU reservations use upstream V1 defaults;
   actual storage CPU/memory overhead must be measured before expanding scope.
+- The pilot uses a non-preempting `longhorn-pilot` PriorityClass for both
+  chart and dynamically generated workloads. If CPU requests cannot fit, new
+  Pods remain Pending rather than evicting existing applications. The chart's
+  upstream `longhorn-critical` class is rendered but unused by this pilot.
 - Two global-manager replicas require different hosts; CSI controller
   components use two replicas. The optional UI has one replica and is exposed
   only as ClusterIP. No Ingress or NodePort is created.
