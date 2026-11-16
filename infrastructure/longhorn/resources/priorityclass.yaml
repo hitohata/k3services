@@ -1,0 +1,11 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: longhorn-pilot
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: Prune=false
+value: 1000000
+globalDefault: false
+preemptionPolicy: Never
+description: Prioritize the storage pilot without preempting existing workloads.

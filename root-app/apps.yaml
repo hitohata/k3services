@@ -348,6 +348,95 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
+# NixOS tool lookup for every Longhorn Pod, including dynamic CSI/engine Pods.
+# Install and verify the policy before manually syncing Longhorn itself.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn-admission
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  project: default
+  sources:
+    - repoURL: https://kyverno.github.io/kyverno/
+      chart: kyverno
+      targetRevision: 3.10.0
+      helm:
+        releaseName: longhorn-admission
+        valueFiles:
+          - $values/infrastructure/longhorn/admission-values.yaml
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      ref: values
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      path: infrastructure/longhorn/admission
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kyverno
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - DisableClientSideApplyMigration=true
+---
+# Longhorn pilot infrastructure. Manual sync after all host prerequisites pass.
+# No deletion finalizer and no automated prune: storage removal is maintenance.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.longhorn.io
+      chart: longhorn
+      targetRevision: 1.13.0
+      helm:
+        releaseName: longhorn
+        valueFiles:
+          - $values/infrastructure/longhorn/values.yaml
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      ref: values
+    - repoURL: https://github.com/hitohata/k3services
+      targetRevision: HEAD
+      path: infrastructure/longhorn/resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - DisableClientSideApplyMigration=true
+---
+# Disposable failover test. Manual sync, separate from the storage installation.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn-pilot
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hitohata/k3services
+    targetRevision: HEAD
+    path: infrastructure/longhorn/pilot
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-pilot
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+---
 # traefik-config
 apiVersion: argoproj.io/v1alpha1
 kind: Application

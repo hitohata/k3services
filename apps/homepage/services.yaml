@@ -107,3 +107,7 @@
         icon: github.png
         href: https://github.com/hitohata/k3services
         description: Cluster GitOps repository
+    - Longhorn:
+        icon: longhorn.png
+        href: https://github.com/hitohata/k3services/tree/HEAD/infrastructure/longhorn
+        description: Replicated SSD storage guide

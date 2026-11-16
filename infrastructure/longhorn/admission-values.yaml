@@ -1,0 +1,57 @@
+# Only the admission controller is needed for Longhorn Pod PATH injection.
+global:
+  nodeSelector:
+    storage.dejima.men/longhorn: "true"
+
+admissionController:
+  replicas: 2
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/component: admission-controller
+        topologyKey: kubernetes.io/hostname
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+backgroundController:
+  enabled: false
+cleanupController:
+  enabled: false
+reportsController:
+  enabled: false
+
+features:
+  admissionReports:
+    enabled: false
+  aggregateReports:
+    enabled: false
+  policyReports:
+    enabled: false
+  backgroundScan:
+    enabled: false
+  generateValidatingAdmissionPolicy:
+    enabled: false
+  generateMutatingAdmissionPolicy:
+    enabled: false
+
+config:
+  webhooks:
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: longhorn-system
+      matchExpressions: []
+
+crds:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+  migration:
+    enabled: false
+
+upgrade:
+  legacyPolicyCheck:
+    enabled: false
+
+webhooksCleanup:
+  enabled: false

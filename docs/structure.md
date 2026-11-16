@@ -207,6 +207,26 @@ storage-related workloads off `p51`'s SD card. A local-path database is tied to
 its node, so it is not high availability. Its backup is what makes node
 recovery practical.
 
+## Replicated local storage pilot
+
+The manually synchronized Longhorn pilot prepares two copies of selected local
+application data on n100 and p41 SSDs. Chart 1.13.0 uses V1, the non-default
+retained `longhorn-ssd-ha` StorageClass, and explicit SSD paths. p51 stores no
+replicas. Existing application PVCs and placements remain unchanged.
+
+The companion `longhorn-admission` Application pins Kyverno chart 3.10.0 with
+two admission-controller replicas. Its policy appends the NixOS host-tool path
+only to newly created Longhorn Pod containers, including dynamic CSI and
+instance-manager Pods. Other Kyverno controllers and reporting are disabled.
+The `longhorn-pilot` Application supplies a separate 1 GiB marker-based recovery
+test. All three Applications require manual synchronization. The management UI
+is available by port-forward only, without an Ingress.
+
+See [the deployment guide](../infrastructure/longhorn/README.md) for host gates,
+activation order, checks, and the [HA assessment](storage-ha-plan.md) for capacity,
+database compatibility and failover limits. These files prepare the pilot;
+installation and outage acceptance are separate operational steps.
+
 ## NAS layout
 
 The `nfs-client-nextcloud` StorageClass provisions paths below the existing NFS
