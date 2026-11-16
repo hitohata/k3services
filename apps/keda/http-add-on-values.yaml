@@ -3,13 +3,25 @@
 operator:
   replicas: 1
   pullPolicy: IfNotPresent
+  affinity: &preferP41
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - p41
 
 scaler:
   replicas: 1
   pullPolicy: IfNotPresent
+  affinity: *preferP41
 
 interceptor:
   pullPolicy: IfNotPresent
+  affinity: *preferP41
   replicas:
     min: 1
     max: 1

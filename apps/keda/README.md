@@ -5,6 +5,14 @@ the `keda` namespace from the pinned `kedacore/keda` Helm chart. The pinned
 KEDA HTTP Add-on is installed alongside it and supplies the interceptor,
 scaler, and operator needed to scale HTTP workloads from zero.
 
+The three HTTP Add-on Deployments prefer `p41` through soft node affinity.
+They are stateless and retain fallback placement on other eligible nodes.
+Moving them off n100 frees 750m of requested CPU (250m per Pod) and 60 MiB of
+requested memory for the replicated-storage pilot. Images, requests, replica
+counts, Services and scaling behavior are unchanged. Updating this preference
+rolls the three Deployments; check interceptor readiness and Immich ML/Stirling
+request handling afterward.
+
 The KEDA Argo CD Application uses server-side apply and disables Argo CD's
 client-side apply migration because the chart's `ScaledJob` CRD is too large
 for Kubernetes' client-side apply annotation. Keep both sync options when

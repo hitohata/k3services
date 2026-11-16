@@ -110,6 +110,10 @@ namespace. Only Stirling PDF uses this mechanism currently.
 | KEDA HTTP Add-on | Intercepts HTTP traffic, reports demand, and holds cold-start requests | None |
 
 KEDA core and its HTTP Add-on run in the `keda` namespace. The HTTP interceptor
+and the Add-on's operator and scaler prefer p41, with other eligible nodes
+retained as fallback. These stateless Pods reserve 750m CPU in total; placing
+them on p41 provides n100 headroom for the replicated-storage pilot. The
+HTTP interceptor
 keeps one replica running for the initial proof-of-concept. Stirling PDF's
 Ingress targets an `ExternalName` bridge to that interceptor; the interceptor
 then forwards matching requests to Stirling's ordinary Service. KEDA scales
