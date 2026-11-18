@@ -1,6 +1,6 @@
 # Replicated SSD storage pilot
 
-Longhorn chart **1.13.0** is prepared as the `longhorn` Argo CD Application.
+Longhorn chart **1.13.0** is deployed as the `longhorn` Argo CD Application.
 It uses the V1 engine with one replica on each of **n100 and p41**. Both the
 installation and the separate `longhorn-pilot` Application require manual
 sync. Nothing in this package migrates existing application claims.
@@ -16,7 +16,29 @@ Read-only inspection on **2026-11-15** confirmed both node labels, loaded
 `/var/lib/longhorn` bind resolves to `/dev/sda[/longhorn]` with about 104 GiB
 free; n100's directory is on its SSD with about 317 GiB free. p51 still reports
 DiskPressure, so an actual n100-outage test remains blocked. Longhorn and
-the admission engine are not installed yet.
+the admission engine are now installed.
+
+## Runtime checks (2026-11-18)
+
+All three Applications are Synced/Healthy. The 1 GiB pilot has two running
+replicas, one per SSD host. Controlled consumer movement from n100 to p41 and
+back to n100 succeeded. The original marker and a second file written on p41
+retained their checksums after reattachment:
+
+- `/data/marker`: `577a9c604a1080868020d1a0918e8867164802848d9edfd1ef84972724a863ae`
+- `/data/roundtrip`: `c9669e597d4d1ec88aba380eaf1cda33e09c269b6b73d5dd8c213853489bb719`
+
+The temporary hostname selector was removed, restoring Git-managed placement.
+This verifies controlled CSI detach/attach and data retention. Actual node-loss
+recovery, fencing, recovery time, and backup restore remain untested. Existing
+application claims have not been migrated.
+
+During installation, an obsolete API registration for `192.168.10.167` caused
+intermittent in-cluster API connections. Current members and identity leases
+were verified before a revision-guarded deletion of that single stale,
+non-expiring etcd masterlease key. Managed Endpoints/EndpointSlices then
+converged to the three current API servers. Do not manage these generated
+endpoints through this repository. The temporary diagnostic Pod was removed.
 
 ## Host handoff to .dot-nix
 
@@ -75,6 +97,13 @@ references without a reviewed default, and indirect PATH values supplied by
 valueFrom, fail closed rather than silently receiving a guessed environment.
 Review and update the image inventory in the policy during upgrades.
 
+Explicit `autogen.podControllers.controllers: []` prevents controller-template
+mutation; disabling native MutatingAdmissionPolicy generation alone does not
+disable this separate Kyverno default. Live server-side dry-runs confirmed
+that Pods receive the host PATH while Deployment templates remain unchanged.
+Admission rolling updates use zero surge and one unavailable replica to avoid
+a scheduling deadlock with two hosts and required pod anti-affinity.
+
 Kyverno is a new admission dependency for Longhorn Pod creation. A missing
 webhook blocks new Longhorn Pods, while the namespace selector leaves other
 applications outside this webhook's scope. Preserve at least one working
@@ -107,7 +136,8 @@ checks on both hosts remain necessary after offline mutation tests pass.
   components use two replicas. The optional UI has one replica and is exposed
   only as ClusterIP. No Ingress or NodePort is created.
 - The configured node-down policy allows automatic recovery of Deployment and
-  StatefulSet pods. It is validated with disposable data before real workloads.
+  StatefulSet pods. Test this with an actual outage and disposable data before
+  using it for real workloads.
   A network partition is not equivalent to a confirmed powered-off writer;
   evaluate isolation and storage fencing before claiming partition safety.
 - No Longhorn backup target or recurring backup is configured yet. The pilot
@@ -125,7 +155,8 @@ client-side last-applied annotations.
 ## Activation and storage checks
 
 These are operator steps after host preparation and explicit authorization for
-cluster changes; they have not been executed by preparing these files.
+cluster changes. Installation and controlled reattachment are complete;
+the actual outage steps remain pending.
 
 1. Publish the reviewed Git changes so Argo CD can read them. Manually sync
    **longhorn-admission**, without pruning. Verify both admission replicas and
@@ -183,6 +214,24 @@ kubectl -n longhorn-system port-forward service/longhorn-frontend 8080:80
 Then open `http://127.0.0.1:8080`. Homepage links to this guide rather than
 exposing an unauthenticated storage administration endpoint.
 
+When triggering sync through the Application's `operation` field rather than
+the Argo CD API/CLI, explicitly copy `spec.syncPolicy.syncOptions` into
+`operation.sync.syncOptions`. The controller does not automatically inherit
+those options for a manually patched operation; omitting ServerSideApply
+causes large CRDs to exceed the client-side annotation limit.
+
+The guarded helper copies these options, refuses to overwrite an in-flight
+operation, checks the resource version, and never requests pruning:
+
+```bash
+bash infrastructure/longhorn/sync.sh longhorn-admission
+bash infrastructure/longhorn/sync.sh longhorn
+bash infrastructure/longhorn/sync.sh longhorn-pilot
+```
+
+Run one authorized stage at a time and verify it before starting the next.
+The helper requires kubectl and the Python `yq`/jq command syntax.
+
 ## Validation
 
 Preparation checks passed on 2026-11-14: Helm lint and rendering for Kubernetes
@@ -195,7 +244,7 @@ The 2026-11-15 admission addition passed Helm lint/rendering, validation of
 23 standard Kubernetes resources, all 22 Kyverno CRD objects against the
 cluster's apiextensions OpenAPI schema, and the namespaced policy against the
 pinned Kyverno CRD schema. All five offline policy regression tests passed
-using the checksum-verified v1.20.0 CLI. No admission resources were installed.
+using the checksum-verified v1.20.0 CLI. These were preparation-time checks.
 
 Use the pinned chart with Helm and the repository values:
 
