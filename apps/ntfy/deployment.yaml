@@ -43,7 +43,7 @@ kind: Deployment
 metadata:
   name: ntfy
 spec:
-  replicas: 0
+  replicas: 1
   revisionHistoryLimit: 2
   strategy:
     type: Recreate
@@ -58,7 +58,17 @@ spec:
       automountServiceAccountToken: false
       enableServiceLinks: false
       nodeSelector:
-        kubernetes.io/hostname: n100
+        storage.dejima.men/longhorn: "true"
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - p41
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
@@ -117,7 +127,7 @@ spec:
       volumes:
         - name: cache
           persistentVolumeClaim:
-            claimName: ntfy-cache
+            claimName: ntfy-cache-ha
         - name: config
           configMap:
             name: ntfy-config

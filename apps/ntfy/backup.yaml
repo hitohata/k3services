@@ -11,3 +11,111 @@ spec:
   resources:
     requests:
       storage: 1Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ntfy-cache-backup
+spec:
+  schedule: "30 5 * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 1800
+      backoffLimit: 2
+      template:
+        spec:
+          automountServiceAccountToken: false
+          enableServiceLinks: false
+          restartPolicy: Never
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/name: ntfy
+                  topologyKey: kubernetes.io/hostname
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+          initContainers:
+            - name: snapshot
+              image: docker.io/keinos/sqlite3:3.51.2
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  sqlite3 -bail -uri 'file:/data/cache.db?mode=ro' '.backup /staging/cache.db'
+                  test "$(sqlite3 -bail /staging/cache.db 'PRAGMA integrity_check;')" = ok
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: cache
+                  mountPath: /data
+                  readOnly: true
+                - name: staging
+                  mountPath: /staging
+          containers:
+            - name: archive
+              image: docker.io/alpine:3.22.7
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -ec
+              args:
+                - |
+                  umask 077
+                  archive="/backups/ntfy-cache-$(date -u +%Y%m%dT%H%M%SZ).tar.gz"
+                  tar -czf "$archive.partial" -C /staging cache.db
+                  sync
+                  mv "$archive.partial" "$archive"
+                  find /backups -maxdepth 1 -type f -name 'ntfy-cache-*.tar.gz' -mtime +13 -exec rm -f {} +
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: staging
+                  mountPath: /staging
+                  readOnly: true
+                - name: backups
+                  mountPath: /backups
+          volumes:
+            - name: cache
+              persistentVolumeClaim:
+                claimName: ntfy-cache-ha
+            - name: staging
+              emptyDir: {}
+            - name: backups
+              persistentVolumeClaim:
+                claimName: ntfy-backups
