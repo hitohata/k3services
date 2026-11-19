@@ -3,20 +3,17 @@
 Status: Longhorn, admission, and the 1 GiB pilot deployed, 2026-11-18.
 See [the Longhorn package](../infrastructure/longhorn/README.md) for the pinned
 chart values, SSD-node definitions, StorageClass, disposable test, host handoff,
-and activation procedure. On 2026-11-19 ntfy became the first migration
-candidate using a new 2 GiB replicated claim, preferring p41. Its original
-local-path claim is retained, and its NAS migration backup was independently
-restored with SQLite integrity and checksum verification. Other applications
-have not been migrated.
+and activation procedure. On 2026-11-19 ntfy's stopped cache was backed up to
+NAS and independently restored with SQLite integrity/checksum verification.
+A new 2 GiB Longhorn claim was populated, but another p41 USB SSD failure
+occurred before ntfy started. The cutover was rolled back to its original
+n100/local-path configuration. Both claims and the verified archive remain.
+No application migration has been accepted.
 
-Both SSD replicas are healthy. Controlled n100 → p41 → n100 reattachment
-retained the original marker and a file written on p41, with matching
-checksums. SSD mounts, node labels, iSCSI and p41 NFS mounts were verified.
-Actual node-outage and ingress recovery remain untested; p51 DiskPressure
-still prevents an n100-outage acceptance test. The p41 SSD disappeared after
-USB/UAS errors on 2026-11-18. A port change and reboot restored it on
-2026-11-19, and both pilot replicas returned healthy. The root cause is
-unconfirmed; observe the ntfy migration before expanding.
+The SSD disappeared again despite a port change and reboot. p41 K3s stopped
+with the mount dependency, leaving the storage pilot degraded on n100. Repair
+and observe USB storage before retrying. Actual node-outage and ingress recovery
+remain untested; p51 DiskPressure also prevents an n100-outage acceptance test.
 
 ## Objective
 

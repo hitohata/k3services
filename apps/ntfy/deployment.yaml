@@ -58,17 +58,7 @@ spec:
       automountServiceAccountToken: false
       enableServiceLinks: false
       nodeSelector:
-        storage.dejima.men/longhorn: "true"
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              preference:
-                matchExpressions:
-                  - key: kubernetes.io/hostname
-                    operator: In
-                    values:
-                      - p41
+        kubernetes.io/hostname: n100
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
@@ -127,7 +117,7 @@ spec:
       volumes:
         - name: cache
           persistentVolumeClaim:
-            claimName: ntfy-cache-ha
+            claimName: ntfy-cache
         - name: config
           configMap:
             name: ntfy-config

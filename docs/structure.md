@@ -216,9 +216,9 @@ recovery practical.
 The manually synchronized Longhorn pilot is deployed with two copies of
 disposable test data on n100 and p41 SSDs. Chart 1.13.0 uses V1, the non-default
 retained `longhorn-ssd-ha` StorageClass, and explicit SSD paths. p51 stores no
-replicas. ntfy is the first application using a new replicated claim and
-prefers p41; its old local-path claim is retained. Other applications remain
-on their existing storage and placements.
+replicas. ntfy prepared a new replicated claim but its cutover was rolled back
+after another p41 USB SSD failure. Existing applications remain on their
+original storage and placements.
 
 The companion `longhorn-admission` Application pins Kyverno chart 3.10.0 with
 two admission-controller replicas. Its policy appends the NixOS host-tool path
@@ -232,7 +232,8 @@ See [the deployment guide](../infrastructure/longhorn/README.md) for host gates,
 activation order, checks, and the [HA assessment](storage-ha-plan.md) for capacity,
 database compatibility and failover limits. Controlled n100 → p41 → n100
 reattachment preserved both test files. ntfy migration includes a verified
-NAS backup restore. Actual node-outage recovery remains untested.
+NAS backup restore, but the application cutover was rolled back. Actual
+node-outage recovery remains untested.
 
 ## NAS layout
 
@@ -544,21 +545,21 @@ credentials.
 
 | Component | Purpose | Storage |
 | --- | --- | --- |
-| ntfy | Publish/subscribe notifications at `https://ntfy.dejima.men`; LAN alias `http://ntfy.n100.lan` | 2 GiB Longhorn V1 cache, two SSD replicas on n100/p41 |
-| Cache backup | Daily SQLite snapshot at 05:30 UTC, 14-day retention | Retained NFS `ntfy-backups` claim |
+| ntfy | Publish/subscribe notifications at `https://ntfy.dejima.men`; LAN alias `http://ntfy.n100.lan` | Original n100 local-path cache PVC |
+| Migration recovery archive | Verified stopped-cache backup | Retained NFS `ntfy-backups` claim |
 
-ntfy prefers p41 and allows n100 as a fallback. Its new `ntfy-cache-ha` claim
-uses `longhorn-ssd-ha`; the original local-path claim remains declared and
-protected from pruning for rollback. The NAS path is
-`/Pi-NAS/ntfy/ntfy-backups`. The pre-migration archive is retained separately
-from daily retention and was restored with a successful SQLite integrity check.
-Backup jobs follow the running application using required Pod affinity for
-same-node RWO access. The cache retains notifications for 12 hours. The gateway
-terminates TLS, and anonymous topic access remains enabled.
+The attempted p41/Longhorn cutover was rolled back on 2026-11-19 after the USB
+SSD disappeared again before ntfy started. Both `ntfy-cache` and the prepared
+`ntfy-cache-ha` claims remain declared and protected from pruning. The NAS
+archive at `/Pi-NAS/ntfy/ntfy-backups/pre-longhorn-20261119.tar.gz` was restored
+independently with SQLite integrity and checksum verification. The daily backup
+CronJob remains suspended: it targets the prepared Longhorn cache and must not
+run while ntfy uses its old local-path cache. The cache retains notifications
+for 12 hours. The gateway and anonymous topic access are unchanged.
 
-See [the service guide](../apps/ntfy/README.md) for restore, rollback, and the
-unverified node-outage/ingress recovery limitations. The p41 USB disconnect
-cause remains unconfirmed; observe this first migration before expanding.
+See [the service guide](../apps/ntfy/README.md) for restore and rollback. Repair
+and observe p41 USB storage before retrying migration; node-outage and ingress
+recovery remain unverified.
 
 ## Wallos retirement
 

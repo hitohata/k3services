@@ -17,6 +17,7 @@ kind: CronJob
 metadata:
   name: ntfy-cache-backup
 spec:
+  suspend: true
   schedule: "30 5 * * *"
   timeZone: Etc/UTC
   concurrencyPolicy: Forbid

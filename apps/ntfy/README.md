@@ -4,11 +4,11 @@ ntfy is a self-hosted publish/subscribe notification service. It is available
 through the TLS-terminating gateway at `https://ntfy.dejima.men` and directly
 on the LAN at `http://ntfy.n100.lan`.
 
-The service runs as a single replica, preferring p41 with n100 as an eligible
-fallback. Its SQLite cache uses the 2 GiB `ntfy-cache-ha` Longhorn V1 PVC with
-one SSD replica on n100 and one on p41. The original `ntfy-cache` local-path
-claim remains declared and protected from pruning for rollback. Its PV reclaim
-policy was separately changed to Retain. Do not delete it during observation.
+The service runs as a single replica on n100 using its original `ntfy-cache`
+local-path claim. The attempted Longhorn/p41 cutover was rolled back after
+the USB SSD disappeared again before ntfy started. Both claims remain declared
+and protected from pruning. The original PV reclaim policy was separately
+changed to Retain. Do not delete either claim during investigation.
 The cache retains messages for 12 hours; backups do not extend live retention.
 
 ntfy is configured to run behind Traefik and advertises the HTTPS public URL in
@@ -33,7 +33,10 @@ On 2026-11-19 the server was stopped through GitOps before archiving the
 complete cache directory to the independent NAS claim. The archive was restored
 on a separate host, SQLite `integrity_check` returned `ok`, and the restored
 cache matched the source byte for byte. The verified NAS archive was then
-restored onto the new Longhorn volume before starting ntfy. Image 2.34.0 is
+restored onto the new Longhorn volume before attempting to start ntfy. The p41 USB SSD then failed again with UAS
+recovery and I/O errors, stopping K3s. The ntfy container never started on p41;
+the Deployment was returned to n100 and its unchanged original cache. The
+Longhorn claim and NAS archive are retained. Image 2.34.0 is
 unchanged and its registry manifest supports AMD64 and ARM64.
 
 - Original cache SHA256: `de046477270c252a400c6031ad5082a027ad6bc870f99f505bf589dc4d0ee8f4`
@@ -43,6 +46,9 @@ unchanged and its registry manifest supports AMD64 and ARM64.
 The `ntfy-backups` NFS PVC uses retained `nfs-client-ntfy` storage. A daily
 SQLite online backup runs at 05:30 UTC and keeps 14 days of timestamped cache
 archives. The fixed pre-migration archive is excluded from automatic retention.
+The CronJob is currently **suspended** because the active application was
+rolled back to local-path while its backup template references `ntfy-cache-ha`.
+Do not resume it until the cache claim and application placement agree.
 The job uses required Pod affinity to the running ntfy Pod, allowing it to
 mount the same RWO volume on the current application node, including after
 reattachment. If ntfy is absent, the job stays Pending rather than binding to
