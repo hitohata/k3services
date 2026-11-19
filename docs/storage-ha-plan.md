@@ -1,16 +1,15 @@
 # Replicated storage and automatic application recovery
 
-Status: manually activated GitOps configuration prepared, 2026-11-14. Not deployed.
+Status: Longhorn, admission, and the 1 GiB pilot deployed, 2026-11-18.
 See [the Longhorn package](../infrastructure/longhorn/README.md) for the pinned
 chart values, SSD-node definitions, StorageClass, disposable test, host handoff,
 and activation procedure. Existing applications have not been migrated.
 
-Read-only follow-up on 2026-11-15 verified the SSD mounts, node labels and
-iSCSI host setup. The remaining Kubernetes integration is prepared in the
-manual-sync `longhorn-admission` Application (Kyverno chart 3.10.0 / v1.20.0),
-with namespace-limited Pod mutation and offline regression tests. Longhorn
-and the admission engine remain uninstalled; p51 DiskPressure still prevents
-an n100-outage acceptance test.
+Both SSD replicas are healthy. Controlled n100 → p41 → n100 reattachment
+retained the original marker and a file written on p41, with matching
+checksums. SSD mounts, node labels, iSCSI and p41 NFS mounts were verified.
+Actual node-outage recovery, ingress recovery and independent backup restore
+remain untested; p51 DiskPressure still prevents an n100-outage acceptance test.
 
 ## Objective
 
@@ -24,7 +23,7 @@ Automatic restart includes an interruption for failure detection, safe volume
 reattachment, and application recovery. No recovery-time or zero-data-loss
 guarantee has been established. Replication does not replace independent backups.
 
-## Proposed storage pilot
+## Storage pilot
 
 Evaluate **Longhorn V1**, with one data replica on n100's SSD and one on p41's
 SSD. Do not place data replicas on p51's SD card. p51 remains an existing K3s
@@ -33,10 +32,9 @@ control-plane/etcd member; it is not a third copy of application data.
 The candidate version researched is Longhorn `1.13.0`, the upstream latest
 release at assessment time. It requires Kubernetes >= 1.34; the observed
 cluster is K3s 1.35. The prepared package pins that chart and its image versions.
-Its Applications are manual-sync only; no Longhorn resources have been applied
-to the cluster as part of this work.
+Its Applications remain manual-sync only after the initial deployment.
 
-Design requirements for a future pilot configuration:
+The deployed pilot follows these design requirements:
 
 - Keep the current default StorageClass; create a separate, non-default class
   for replicated volumes, with `Retain` reclaim policy and two replicas.

@@ -213,8 +213,8 @@ recovery practical.
 
 ## Replicated local storage pilot
 
-The manually synchronized Longhorn pilot prepares two copies of selected local
-application data on n100 and p41 SSDs. Chart 1.13.0 uses V1, the non-default
+The manually synchronized Longhorn pilot is deployed with two copies of
+disposable test data on n100 and p41 SSDs. Chart 1.13.0 uses V1, the non-default
 retained `longhorn-ssd-ha` StorageClass, and explicit SSD paths. p51 stores no
 replicas. Existing application PVCs and placements remain unchanged.
 
@@ -228,8 +228,9 @@ is available by port-forward only, without an Ingress.
 
 See [the deployment guide](../infrastructure/longhorn/README.md) for host gates,
 activation order, checks, and the [HA assessment](storage-ha-plan.md) for capacity,
-database compatibility and failover limits. These files prepare the pilot;
-installation and outage acceptance are separate operational steps.
+database compatibility and failover limits. Controlled n100 → p41 → n100
+reattachment preserved both test files. Actual node-outage recovery and
+existing application migration remain separate, uncompleted steps.
 
 ## NAS layout
 
