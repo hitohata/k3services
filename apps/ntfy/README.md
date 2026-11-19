@@ -24,3 +24,17 @@ verify publishing, subscriptions, and replay of cached messages. Reconnects
 using `since=<message ID>` may replay messages from the same second; custom
 subscribers should deduplicate by message ID. Cache replays are now size- and
 bandwidth-limited, so unusually large polls may return HTTP 429.
+
+## Longhorn migration in progress
+
+This first stage deliberately sets replicas to zero so the SQLite cache can
+be copied consistently. The source `ntfy-cache` claim stays declared and is
+protected with `Prune=false`. The separate `ntfy-cache-ha` claim uses the
+non-default two-replica Longhorn class; do not switch the Deployment or start
+it until the stopped cache has been backed up independently and restored.
+Rollback at this stage is to restore replicas to one with the original claim.
+The application image and external routes are unchanged.
+
+The independent `ntfy-backups` NFS claim uses `nfs-client-ntfy`, provisioning
+`/Pi-NAS/ntfy/ntfy-backups`. Migration archives are retained there; no automated
+retention/deletion is configured during the first migration stage.

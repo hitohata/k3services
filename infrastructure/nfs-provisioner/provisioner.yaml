@@ -262,3 +262,17 @@ allowVolumeExpansion: true
 volumeBindingMode: Immediate
 mountOptions:
   - nfsvers=4
+---
+# ntfy migration and cache recovery archives are independent of SSD replicas.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-client-ntfy
+provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
+parameters:
+  pathPattern: "ntfy/${.PVC.name}"
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+mountOptions:
+  - nfsvers=4
