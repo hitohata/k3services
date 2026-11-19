@@ -31,7 +31,14 @@ retained their checksums after reattachment:
 The temporary hostname selector was removed, restoring Git-managed placement.
 This verifies controlled CSI detach/attach and data retention. Actual node-loss
 recovery, fencing, recovery time, and backup restore remain untested. Existing
-application claims have not been migrated.
+application claims were unchanged at that check. ntfy is the first migration
+on 2026-11-19; see its [service guide](../../apps/ntfy/README.md).
+
+On 2026-11-19, p41 recovered from a USB SSD disappearance after a port change
+and reboot. Mount/K3s dependencies kept the node stopped while the SSD was
+absent. Both pilot replicas returned healthy, and both file checksums still
+matched. This observed storage-node interruption does not establish writer-node
+failover or partition fencing. The USB fault root cause remains unconfirmed.
 
 During installation, an obsolete API registration for `192.168.10.167` caused
 intermittent in-cluster API connections. Current members and identity leases
