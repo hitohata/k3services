@@ -540,6 +540,11 @@ credentials.
 
 ## ntfy components
 
+The Longhorn migration is staged: ntfy is temporarily stopped for a consistent
+cache backup/copy. The original local-path claim is retained and protected
+from pruning; a separate 2 GiB `ntfy-cache-ha` claim is being prepared.
+See [the migration guide](../apps/ntfy/README.md).
+
 | Component | Purpose | Storage |
 | --- | --- | --- |
 | ntfy | Publish/subscribe notifications at `https://ntfy.dejima.men`; LAN alias `http://ntfy.n100.lan` | K3s `local-path` cache PVC on `n100` |
